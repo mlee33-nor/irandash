@@ -69,6 +69,12 @@ module.exports = async function scrapeStrikes() {
     const items = result.value.items || [];
 
     for (const item of items.slice(0, 25)) {
+      // Only last 24 hours
+      if (item.isoDate) {
+        const age = Date.now() - new Date(item.isoDate).getTime();
+        if (age > 24 * 60 * 60 * 1000) continue;
+      }
+
       const title = item.title || '';
       const snippet = item.contentSnippet || item.content || '';
       const text = `${title} ${snippet}`;
@@ -118,7 +124,7 @@ module.exports = async function scrapeStrikes() {
   // Source 2: GDELT - also with tight Iran bounding box + strike-on-Iran language
   try {
     const query = encodeURIComponent('"strike on iran" OR "attacked iran" OR "bombed iran" OR "hit iran" OR "struck iran"');
-    const url = `https://api.gdeltproject.org/api/v2/geo/geo?query=${query}&mode=pointdata&format=geojson&timespan=7d&maxpoints=15`;
+    const url = `https://api.gdeltproject.org/api/v2/geo/geo?query=${query}&mode=pointdata&format=geojson&timespan=1d&maxpoints=15`;
     const response = await fetch(url, { timeout: 15000 });
     if (response.ok) {
       const text = await response.text();

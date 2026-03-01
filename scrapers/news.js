@@ -6,6 +6,11 @@ const FEEDS = [
   { url: 'https://rss.app/feeds/v1.1/tFnGReFbiVMuYN3q.xml', source: 'Reuters' },
   { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
   { url: 'https://feeds.washingtonpost.com/rss/world', source: 'Washington Post' },
+  { url: 'https://news.google.com/rss/search?q=iran+war+OR+attack+OR+strike+OR+bomb&hl=en-US&gl=US&ceid=US:en', source: 'Google News' },
+  { url: 'https://www.middleeasteye.net/rss', source: 'Middle East Eye' },
+  { url: 'https://english.alarabiya.net/tools/rss', source: 'Al Arabiya' },
+  { url: 'https://www.timesofisrael.com/feed/', source: 'Times of Israel' },
+  { url: 'https://www.jpost.com/rss/rssfeedsfrontpage.aspx', source: 'Jerusalem Post' },
 ];
 
 const KEYWORDS = [

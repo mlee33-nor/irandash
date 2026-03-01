@@ -47,18 +47,6 @@ const MapModule = (function () {
     { name: 'ADEN PORT', lat: 12.80, lng: 45.02, country: 'Yemen', type: 'naval', desc: 'Coalition naval ops. UAE-aligned forces. Red Sea chokepoint control.' },
   ];
 
-  // Confirmed/reported strike locations in Iran (from OSINT reports)
-  const CONFIRMED_STRIKES = [
-    { name: 'Isfahan - S-300 site', lat: 32.65, lng: 51.68, date: '2024-04-19', desc: 'Israeli strike on air defense site near Natanz. S-300 radar targeted.', source: 'Multiple OSINT/satellite' },
-    { name: 'Isfahan - Nuclear area', lat: 32.72, lng: 51.74, date: '2024-10-26', desc: 'Israeli Operation Days of Repentance. IRGC radar & missile production targeted.', source: 'IDF/satellite imagery' },
-    { name: 'Tehran - Parchin', lat: 35.52, lng: 51.77, date: '2024-10-26', desc: 'Strike on Parchin military complex. Missile component production facility.', source: 'Satellite/IDF' },
-    { name: 'Khojir missile base', lat: 35.58, lng: 51.66, date: '2024-10-26', desc: 'IRGC missile R&D facility east of Tehran. Solid fuel missile development.', source: 'IDF/Planet Labs' },
-    { name: 'Shahroud missile site', lat: 36.42, lng: 55.02, date: '2024-10-26', desc: 'IRGC Aerospace Force facility. Space launch / ICBM development site.', source: 'Satellite imagery' },
-    { name: 'Ilam - AD site', lat: 33.64, lng: 46.42, date: '2024-10-26', desc: 'Air defense battery near Iraq border. Part of western air defense network.', source: 'IDF statement' },
-    { name: 'Tabriz radar site', lat: 38.05, lng: 46.35, date: '2024-10-26', desc: 'Long-range radar installation. Northwestern air surveillance coverage.', source: 'Open source' },
-    { name: 'Natanz enrichment', lat: 33.51, lng: 51.73, date: '2021-04-11', desc: 'Sabotage attack on centrifuge hall. Attributed to Israel/Mossad.', source: 'IAEA/Iran govt' },
-    { name: 'Fordow enrichment', lat: 34.88, lng: 51.59, date: 'Ongoing', desc: 'Underground enrichment facility. 60% U-235 production. IAEA monitored.', source: 'IAEA reports' },
-  ];
 
   function init() {
     map = L.map('map', {
@@ -82,7 +70,6 @@ const MapModule = (function () {
 
     drawRegionOutlines();
     drawNavalBases();
-    drawConfirmedStrikes();
 
     // Layer toggle buttons
     document.querySelectorAll('.ctrl-btn[data-layer]').forEach(btn => {
@@ -131,60 +118,6 @@ const MapModule = (function () {
           </div>
         `);
       marker.addTo(layers.bases);
-    });
-  }
-
-  function drawConfirmedStrikes() {
-    CONFIRMED_STRIKES.forEach(strike => {
-      // Red pulsing circle
-      const circle = L.circle([strike.lat, strike.lng], {
-        radius: 15000,
-        color: '#ff3333',
-        fillColor: '#ff3333',
-        fillOpacity: 0.15,
-        weight: 2,
-        opacity: 0.6,
-        className: 'strike-circle-pulse'
-      });
-
-      circle.bindPopup(`
-        <div class="popup-osint">
-          <div class="popup-title" style="color:#ff3333;font-size:13px">\u26A0 ${escapeHtml(strike.name)}</div>
-          <div class="popup-tag" style="color:#ff3333">CONFIRMED STRIKE</div>
-          <hr style="border-color:#1a3a1a;margin:6px 0">
-          <div class="popup-section">
-            <span class="popup-label">DATE</span>
-            <div class="popup-detail">${escapeHtml(strike.date)}</div>
-          </div>
-          <div class="popup-section">
-            <span class="popup-label">DETAILS</span>
-            <div class="popup-detail">${escapeHtml(strike.desc)}</div>
-          </div>
-          <div class="popup-section">
-            <span class="popup-label">SOURCE</span>
-            <div class="popup-detail">${escapeHtml(strike.source)}</div>
-          </div>
-          <div class="popup-section">
-            <span class="popup-label">COORDINATES</span>
-            <div class="popup-detail">${strike.lat.toFixed(4)}°N, ${strike.lng.toFixed(4)}°E</div>
-          </div>
-          <div class="popup-footer">
-            <a href="https://www.google.com/maps/@${strike.lat},${strike.lng},15z/data=!3m1!1e1" target="_blank" style="color:#ff3333">SAT VIEW \u2192</a>
-          </div>
-        </div>
-      `);
-      circle.addTo(layers.strikes);
-
-      // Inner dot marker
-      const dotIcon = L.divIcon({
-        className: '',
-        html: `<div class="strike-dot"></div>`,
-        iconSize: [14, 14],
-        iconAnchor: [7, 7]
-      });
-      const dotMarker = L.marker([strike.lat, strike.lng], { icon: dotIcon });
-      dotMarker.bindPopup(circle.getPopup());
-      dotMarker.addTo(layers.strikes);
     });
   }
 
