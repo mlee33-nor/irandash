@@ -487,11 +487,11 @@ html, body {
 /* Theater mode - scale iframe to fill card, crop black bars */
 .webcam-card iframe {
   position: absolute;
-  top: 0;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  width: 178%; /* overscan to crop 16:9 letterbox bars */
-  height: 100%;
+  transform: translate(-50%, -50%);
+  width: 300%;
+  height: 300%;
   border: none;
   pointer-events: auto;
 }

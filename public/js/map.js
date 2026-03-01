@@ -33,7 +33,7 @@ const MapModule = (function () {
     { name: 'EILAT NAVAL BASE', lat: 29.55, lng: 34.95, country: 'Israel', type: 'naval', desc: 'Red Sea operations. Sa\'ar 4.5 missile boats. Houthi missile defense.' },
     { name: 'AL UDEID AIR BASE', lat: 25.12, lng: 51.32, country: 'Qatar', type: 'airbase', desc: 'CENTCOM forward HQ. USAF B-52s, KC-135s, ISR assets. ~10,000 US personnel.' },
     { name: 'AL DHAFRA AIR BASE', lat: 24.25, lng: 54.55, country: 'UAE', type: 'airbase', desc: 'USAF F-35s, F-22s, RQ-4 Global Hawks. French Rafale detachment.' },
-    { name: 'NSA BAHRAIN', lat: 26.24, lng: 50.55, country: 'Bahrain', type: 'naval', desc: 'US 5th Fleet HQ. CTF-150/151/152/153. ~9,000 US personnel.' },
+    { name: 'NSA BAHRAIN / 5TH FLEET HQ', lat: 26.24, lng: 50.55, country: 'Bahrain', type: 'hq', desc: 'US 5th Fleet HQ. CTF-150/151/152/153. ~9,000 US personnel.' },
     { name: 'CAMP ARIFJAN', lat: 29.17, lng: 48.10, country: 'Kuwait', type: 'airbase', desc: 'US Army Central forward HQ. Logistics hub for CENTCOM operations.' },
     { name: 'INCIRLIK AIR BASE', lat: 37.00, lng: 35.43, country: 'Turkey', type: 'airbase', desc: 'NATO/USAF base. B61 nuclear weapons storage. ISR and strike ops.' },
     { name: 'HMEIMIM AIR BASE', lat: 35.41, lng: 35.95, country: 'Syria', type: 'airbase', desc: 'Russian VKS base. Su-35, Su-34, S-400. Primary Russian power projection in ME.' },
@@ -49,7 +49,7 @@ const MapModule = (function () {
     { name: 'PARCHIN MILITARY COMPLEX', lat: 35.52, lng: 51.77, country: 'Iran', type: 'military', desc: 'IRGC weapons R&D. Suspected nuclear weapons testing. High-explosive test chambers.' },
     { name: 'NATANZ ENRICHMENT FACILITY', lat: 33.51, lng: 51.73, country: 'Iran', type: 'nuclear', desc: 'Primary uranium enrichment site. Underground centrifuge halls. Stuxnet target 2010.' },
     { name: 'FORDOW ENRICHMENT PLANT', lat: 34.88, lng: 51.59, country: 'Iran', type: 'nuclear', desc: 'Hardened underground enrichment. Built inside mountain near Qom. 60% enrichment.' },
-    { name: 'IRGC HQ TEHRAN', lat: 35.70, lng: 51.42, country: 'Iran', type: 'military', desc: 'Islamic Revolutionary Guard Corps headquarters. Command & control center.' },
+    { name: 'IRGC HQ TEHRAN', lat: 35.70, lng: 51.42, country: 'Iran', type: 'hq', desc: 'Islamic Revolutionary Guard Corps headquarters. Command & control center.' },
     { name: 'SHAHROUD MISSILE BASE', lat: 36.42, lng: 55.02, country: 'Iran', type: 'military', desc: 'IRGC Aerospace Force. Shahab-3, Emad, Khorramshahr ballistic missiles. Space launch.' },
     { name: 'IMAM ALI BASE', lat: 34.55, lng: 45.75, country: 'Iraq', type: 'military', desc: 'IRGC-linked Iraqi PMF base. Iran weapons transfer hub near Syria border.' },
     { name: 'PALMYRA / T4 AIRBASE', lat: 34.52, lng: 37.63, country: 'Syria', type: 'military', desc: 'IRGC drone operations. Repeatedly struck by Israel. Iran forward staging.' },
@@ -57,9 +57,9 @@ const MapModule = (function () {
     { name: 'BUSHEHR NUCLEAR PLANT', lat: 28.83, lng: 50.89, country: 'Iran', type: 'nuclear', desc: 'Iran only operating nuclear power plant. Russian-built VVER-1000 reactor. IAEA monitored.' },
     { name: 'ISFAHAN UCF', lat: 32.60, lng: 51.72, country: 'Iran', type: 'nuclear', desc: 'Uranium Conversion Facility. Converts yellowcake to UF6 gas for enrichment. Key fuel cycle node.' },
     { name: 'ARAK IR-40 REACTOR', lat: 34.05, lng: 49.25, country: 'Iran', type: 'nuclear', desc: 'Heavy water research reactor. Redesigned under JCPOA. Plutonium pathway concern.' },
-    { name: 'MOSSAD HQ', lat: 32.15, lng: 34.83, country: 'Israel', type: 'military', desc: 'Institute for Intelligence and Special Operations. Glilot Junction, north Tel Aviv. Foreign intelligence, covert ops, assassinations program.' },
-    { name: 'IDF NORTHERN COMMAND', lat: 32.79, lng: 35.53, country: 'Israel', type: 'military', desc: 'IDF Northern Command HQ. Lebanon/Syria front. Galilee Div, 36th Div ops.' },
-    { name: 'IDF SOUTHERN COMMAND', lat: 31.25, lng: 34.79, country: 'Israel', type: 'military', desc: 'IDF Southern Command. Gaza operations. 162nd Div, 252nd Div. Rafah crossing ops.' },
+    { name: 'MOSSAD HQ', lat: 32.15, lng: 34.83, country: 'Israel', type: 'hq', desc: 'Institute for Intelligence and Special Operations. Glilot Junction, north Tel Aviv. Foreign intelligence, covert ops, assassinations program.' },
+    { name: 'IDF NORTHERN COMMAND', lat: 32.79, lng: 35.53, country: 'Israel', type: 'hq', desc: 'IDF Northern Command HQ. Lebanon/Syria front. Galilee Div, 36th Div ops.' },
+    { name: 'IDF SOUTHERN COMMAND', lat: 31.25, lng: 34.79, country: 'Israel', type: 'hq', desc: 'IDF Southern Command. Gaza operations. 162nd Div, 252nd Div. Rafah crossing ops.' },
     { name: 'KING ABDULAZIZ AB', lat: 26.27, lng: 50.15, country: 'Saudi Arabia', type: 'military', desc: 'RSAF F-15SA Eagles. Eastern Province air defense. Gulf coalition ops.' },
     { name: 'PRINCE SULTAN AB', lat: 24.06, lng: 47.58, country: 'Saudi Arabia', type: 'military', desc: 'CENTCOM combined air ops center. US Patriot batteries. THAAD deployment.' },
     { name: 'AL TANF GARRISON', lat: 33.51, lng: 38.97, country: 'Syria', type: 'military', desc: 'US SOF outpost. 55km deconfliction zone. Blocks Iran land bridge to Mediterranean.' },
@@ -108,7 +108,9 @@ const MapModule = (function () {
   function drawNavalBases() {
     NAVAL_BASES.forEach(base => {
       let color, symbol, extraStyle = '';
-      if (base.type === 'naval') {
+      if (base.type === 'hq') {
+        color = '#ffd700'; symbol = '\uD83C\uDF96\uFE0F'; // gold medal 🎖️
+      } else if (base.type === 'naval') {
         color = '#3399ff'; symbol = '\u2693'; // anchor ⚓
       } else if (base.type === 'airbase') {
         color = '#ffaa00'; symbol = '\uD83D\uDEEC'; // landing strip 🛬
