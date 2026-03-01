@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IRAN THEATER - OSINT DASHBOARD</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <!-- Scanline overlay -->
+  <div class="scanlines"></div>
+
+  <!-- Top bar -->
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <span class="logo">&#9608;&#9608; WARROOM</span>
+      <span class="classification">OSINT // UNCLASSIFIED</span>
+    </div>
+    <div class="top-bar-center">
+      <span class="title">IRAN THEATER - REAL-TIME INTELLIGENCE DASHBOARD</span>
+    </div>
+    <div class="top-bar-right">
+      <span class="clock" id="clock"></span>
+      <span class="ws-status" id="ws-status">&#9679; CONNECTING</span>
+    </div>
+  </header>
+
+  <!-- Main grid -->
+  <div class="dashboard-grid">
+    <!-- Map panel -->
+    <div class="panel map-panel">
+      <div class="panel-header">
+        <span class="panel-title">&#9650; TACTICAL MAP</span>
+        <div class="map-controls">
+          <button class="ctrl-btn active" data-layer="aircraft">AIR</button>
+          <button class="ctrl-btn active" data-layer="ships">SEA</button>
+          <button class="ctrl-btn active" data-layer="events">EVENTS</button>
+          <button class="ctrl-btn active" data-layer="conflicts">CONFLICT</button>
+          <button class="ctrl-btn active" data-layer="news">NEWS</button>
+          <button class="ctrl-btn active" data-layer="bases">BASES</button>
+          <button class="ctrl-btn active" data-layer="strikes">STRIKES</button>
+        </div>
+      </div>
+      <div id="map"></div>
+    </div>
+
+    <!-- News feed panel -->
+    <div class="panel news-panel">
+      <div class="panel-header">
+        <span class="panel-title">&#9654; LIVE INTELLIGENCE FEED</span>
+        <span class="item-count" id="news-count">0</span>
+      </div>
+      <div class="news-feed" id="news-feed"></div>
+    </div>
+
+    <!-- Bottom stats panels -->
+    <div class="panel stats-panel aircraft-stats">
+      <div class="panel-header">
+        <span class="panel-title">&#9992; AIRCRAFT TRACKING</span>
+      </div>
+      <div class="stats-content" id="aircraft-stats">
+        <div class="stat-row">
+          <span class="stat-label">TRACKED</span>
+          <span class="stat-value" id="aircraft-count">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">MILITARY</span>
+          <span class="stat-value" id="aircraft-military">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">LAST UPDATE</span>
+          <span class="stat-value stat-time" id="aircraft-time">--:--:--</span>
+        </div>
+        <div class="aircraft-list" id="aircraft-list"></div>
+      </div>
+    </div>
+
+    <div class="panel stats-panel ship-stats">
+      <div class="panel-header">
+        <span class="panel-title">&#9875; NAVAL TRACKING</span>
+      </div>
+      <div class="stats-content" id="ship-stats">
+        <div class="stat-row">
+          <span class="stat-label">VESSELS</span>
+          <span class="stat-value" id="ship-count">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">TANKERS</span>
+          <span class="stat-value" id="ship-tankers">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">LAST UPDATE</span>
+          <span class="stat-value stat-time" id="ship-time">--:--:--</span>
+        </div>
+        <div class="ship-list" id="ship-list"></div>
+      </div>
+    </div>
+
+    <div class="panel stats-panel events-panel">
+      <div class="panel-header">
+        <span class="panel-title">&#9888; ALERTS &amp; EVENTS TIMELINE</span>
+      </div>
+      <div class="stats-content">
+        <div class="stat-row">
+          <span class="stat-label">ACTIVE EVENTS</span>
+          <span class="stat-value" id="events-count">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">CONFLICTS</span>
+          <span class="stat-value" id="conflicts-count">--</span>
+        </div>
+        <div class="timeline" id="event-timeline"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Stream Panel -->
+  <div id="stream-panel" class="stream-panel">
+    <div id="stream-header" class="stream-header">
+      <span class="stream-title">&#9654; LIVE MONITOR</span>
+      <select id="stream-select" class="stream-select">
+        <option value="aljazeera">Al Jazeera EN</option>
+        <option value="france24">France 24 EN</option>
+        <option value="dw">DW News</option>
+        <option value="sky">Sky News</option>
+      </select>
+      <button id="stream-close" class="stream-close">&times;</button>
+    </div>
+    <iframe id="stream-frame" class="stream-frame" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  </div>
+
+  <!-- Stream Toggle Button -->
+  <button id="stream-toggle" class="stream-toggle-btn">&#9654; LIVE TV</button>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/news.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

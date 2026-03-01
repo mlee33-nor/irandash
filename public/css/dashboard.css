@@ -1,0 +1,809 @@
+/* ===== RESET & BASE ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-primary: #0a0a0a;
+  --bg-panel: #0d1117;
+  --bg-panel-header: #111820;
+  --border: #1a3a1a;
+  --border-bright: #2a5a2a;
+  --text-primary: #00ff41;
+  --text-dim: #00aa2a;
+  --text-muted: #336633;
+  --text-white: #c0c0c0;
+  --accent-red: #ff3333;
+  --accent-amber: #ffaa00;
+  --accent-blue: #3399ff;
+  --accent-cyan: #00cccc;
+  --glow-green: 0 0 10px rgba(0, 255, 65, 0.3);
+  --glow-red: 0 0 10px rgba(255, 51, 51, 0.3);
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* ===== SCANLINE OVERLAY ===== */
+.scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.08) 0px,
+    rgba(0, 0, 0, 0.08) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* ===== TOP BAR ===== */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 15px;
+  background: var(--bg-panel-header);
+  border-bottom: 1px solid var(--border-bright);
+  z-index: 100;
+}
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logo {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: bold;
+  text-shadow: var(--glow-green);
+  letter-spacing: 2px;
+}
+
+.classification {
+  color: var(--accent-amber);
+  font-size: 10px;
+  letter-spacing: 3px;
+  padding: 2px 8px;
+  border: 1px solid var(--accent-amber);
+  opacity: 0.7;
+}
+
+.top-bar-center .title {
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: var(--text-primary);
+  text-shadow: var(--glow-green);
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.clock {
+  font-size: 14px;
+  color: var(--text-white);
+  letter-spacing: 2px;
+}
+
+.ws-status {
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+}
+
+.ws-status.connected { color: var(--text-primary); }
+.ws-status.disconnected { color: var(--accent-red); }
+.ws-status.connecting { color: var(--accent-amber); }
+
+/* ===== DASHBOARD GRID ===== */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  grid-template-rows: 1fr 220px;
+  height: calc(100vh - 40px);
+  gap: 1px;
+  background: var(--border);
+}
+
+/* ===== PANELS ===== */
+.panel {
+  background: var(--bg-panel);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: var(--bg-panel-header);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.panel-title {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.item-count {
+  background: var(--border-bright);
+  color: var(--text-primary);
+  padding: 1px 8px;
+  font-size: 11px;
+  border-radius: 2px;
+}
+
+/* ===== MAP PANEL ===== */
+.map-panel {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+#map {
+  flex: 1;
+  background: #0a0a0a;
+}
+
+.map-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.ctrl-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 2px 8px;
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+
+.ctrl-btn:hover {
+  border-color: var(--text-dim);
+  color: var(--text-dim);
+}
+
+.ctrl-btn.active {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+  text-shadow: var(--glow-green);
+}
+
+/* ===== NEWS PANEL ===== */
+.news-panel {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.news-feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.news-item {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.2s;
+  animation: slideIn 0.3s ease-out;
+}
+
+.news-item:hover {
+  background: rgba(0, 255, 65, 0.05);
+}
+
+.news-item .news-source {
+  font-size: 10px;
+  letter-spacing: 2px;
+  margin-bottom: 3px;
+}
+
+.news-item .news-title {
+  font-size: 12px;
+  color: var(--text-white);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.news-item .news-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.news-item .news-summary {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  display: none;
+}
+
+.news-item:hover .news-summary {
+  display: block;
+}
+
+/* Severity colors */
+.severity-critical .news-source { color: var(--accent-red); }
+.severity-high .news-source { color: var(--accent-amber); }
+.severity-medium .news-source { color: var(--accent-cyan); }
+.severity-low .news-source { color: var(--text-dim); }
+
+.severity-critical { border-left: 2px solid var(--accent-red); }
+.severity-high { border-left: 2px solid var(--accent-amber); }
+.severity-medium { border-left: 2px solid var(--accent-cyan); }
+.severity-low { border-left: 2px solid var(--border-bright); }
+
+/* ===== BOTTOM STATS ===== */
+.aircraft-stats {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.ship-stats {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.events-panel {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+/* Re-layout bottom row as 3 columns */
+.dashboard-grid {
+  grid-template-columns: 1fr 350px;
+  grid-template-rows: 1fr 220px;
+}
+
+.aircraft-stats {
+  grid-column: 1 / 2;
+  grid-row: 2;
+}
+
+/* Override: bottom row should be split into 3 */
+@supports (grid-template-columns: subgrid) {
+  .dashboard-grid {
+    grid-template-columns: 1fr 1fr 350px;
+  }
+}
+
+/* Fallback layout - more explicit */
+.dashboard-grid {
+  grid-template-columns: 1fr 1fr 350px;
+  grid-template-rows: 1fr 220px;
+}
+
+.map-panel {
+  grid-column: 1 / 3;
+  grid-row: 1;
+}
+
+.news-panel {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.aircraft-stats {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.ship-stats {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.events-panel {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.stats-content {
+  padding: 8px 12px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(26, 58, 26, 0.3);
+}
+
+.stat-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+}
+
+.stat-value {
+  font-size: 18px;
+  color: var(--text-primary);
+  text-shadow: var(--glow-green);
+}
+
+.stat-time {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-shadow: none;
+}
+
+/* ===== AIRCRAFT / SHIP LIST ===== */
+.aircraft-list, .ship-list {
+  margin-top: 6px;
+  max-height: 110px;
+  overflow-y: auto;
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 11px;
+  color: var(--text-dim);
+  border-bottom: 1px solid rgba(26, 58, 26, 0.2);
+}
+
+.list-item .callsign {
+  color: var(--text-primary);
+  min-width: 80px;
+}
+
+.list-item .detail {
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* ===== TIMELINE ===== */
+.timeline {
+  margin-top: 8px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(26, 58, 26, 0.2);
+  font-size: 11px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.timeline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.timeline-dot.military { background: var(--accent-red); box-shadow: var(--glow-red); }
+.timeline-dot.protest { background: var(--accent-amber); }
+.timeline-dot.diplomatic { background: var(--accent-blue); }
+.timeline-dot.nuclear { background: #ff00ff; }
+.timeline-dot.economic { background: var(--accent-cyan); }
+.timeline-dot.general { background: var(--text-muted); }
+.timeline-dot.conflict { background: var(--accent-red); }
+
+.timeline-text {
+  color: var(--text-white);
+  flex: 1;
+}
+
+.timeline-time {
+  color: var(--text-muted);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-panel);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-bright);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.5; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+/* ===== LEAFLET OVERRIDES ===== */
+.leaflet-container {
+  background: #0a0a0a !important;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-bright) !important;
+  border-radius: 2px !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  font-size: 11px !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--border-bright) !important;
+}
+
+.leaflet-popup-content {
+  margin: 8px 12px !important;
+}
+
+.leaflet-popup-content .popup-title {
+  color: var(--text-primary);
+  font-size: 12px;
+  margin-bottom: 4px;
+  text-shadow: var(--glow-green);
+}
+
+.leaflet-popup-content .popup-detail {
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.leaflet-control-zoom a {
+  background: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(10, 10, 10, 0.8) !important;
+  color: var(--text-muted) !important;
+  font-size: 9px !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--text-dim) !important;
+}
+
+/* ===== CUSTOM MAP MARKERS ===== */
+.marker-aircraft {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 6px rgba(0, 204, 204, 0.5);
+  font-size: 16px;
+  transition: transform 0.5s ease;
+}
+
+.marker-ship {
+  color: var(--accent-blue);
+  text-shadow: 0 0 6px rgba(51, 153, 255, 0.5);
+  font-size: 14px;
+}
+
+.marker-event {
+  width: 12px;
+  height: 12px;
+  background: var(--accent-red);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(255, 51, 51, 0.6);
+  position: relative;
+}
+
+.marker-event::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--accent-red);
+  animation: pulse 2s infinite;
+}
+
+.marker-conflict {
+  width: 10px;
+  height: 10px;
+  background: var(--accent-amber);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255, 170, 0, 0.5);
+}
+
+.marker-news {
+  color: var(--text-primary);
+  font-size: 14px;
+  text-shadow: var(--glow-green);
+}
+
+/* ===== BASE MARKERS ===== */
+.base-marker {
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.base-marker:hover {
+  transform: scale(1.3);
+}
+
+/* ===== STRIKE CIRCLES ===== */
+.strike-dot {
+  width: 14px;
+  height: 14px;
+  background: #ff3333;
+  border: 2px solid #ff0000;
+  border-radius: 50%;
+  box-shadow: 0 0 12px #ff3333, 0 0 24px rgba(255,51,51,0.4);
+  cursor: pointer;
+  animation: strikePulse 2s infinite;
+}
+
+@keyframes strikePulse {
+  0% { box-shadow: 0 0 12px #ff3333, 0 0 24px rgba(255,51,51,0.4); }
+  50% { box-shadow: 0 0 20px #ff3333, 0 0 40px rgba(255,51,51,0.6); }
+  100% { box-shadow: 0 0 12px #ff3333, 0 0 24px rgba(255,51,51,0.4); }
+}
+
+/* ===== CONFLICT MARKER PULSES ===== */
+.conflict-pulse {
+  animation: conflictGlow 3s infinite;
+}
+.conflict-pulse-heavy {
+  animation: conflictGlowHeavy 1.5s infinite;
+}
+
+@keyframes conflictGlow {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0.8; }
+}
+
+@keyframes conflictGlowHeavy {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; transform: scale(1.4); }
+  100% { opacity: 0.8; }
+}
+
+/* ===== OSINT POPUP STYLES ===== */
+.popup-osint {
+  min-width: 220px;
+  max-width: 320px;
+}
+
+.popup-tag {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.popup-section {
+  margin: 6px 0;
+}
+
+.popup-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.popup-footer {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid #1a3a1a;
+  font-size: 11px;
+}
+
+.popup-footer a {
+  text-decoration: none;
+  letter-spacing: 1px;
+}
+
+.popup-footer a:hover {
+  text-decoration: underline;
+}
+
+/* ===== LIVE STREAM PANEL ===== */
+.stream-panel {
+  position: fixed;
+  bottom: 240px;
+  right: 360px;
+  width: 400px;
+  height: 260px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-bright);
+  box-shadow: 0 0 20px rgba(0,0,0,0.8);
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  border-radius: 2px;
+}
+
+.stream-panel.visible {
+  display: flex;
+}
+
+.stream-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: var(--bg-panel-header);
+  border-bottom: 1px solid var(--border);
+  cursor: move;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.stream-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--accent-red);
+  white-space: nowrap;
+}
+
+.stream-select {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  font-family: inherit;
+  font-size: 10px;
+  padding: 2px 4px;
+  flex: 1;
+}
+
+.stream-close {
+  background: none;
+  border: none;
+  color: var(--accent-red);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 4px;
+  font-family: inherit;
+}
+
+.stream-frame {
+  flex: 1;
+  border: none;
+  background: #000;
+}
+
+.stream-toggle-btn {
+  position: fixed;
+  bottom: 230px;
+  right: 10px;
+  z-index: 999;
+  background: var(--bg-panel-header);
+  border: 1px solid var(--accent-red);
+  color: var(--accent-red);
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  cursor: pointer;
+  animation: streamBlink 2s infinite;
+}
+
+@keyframes streamBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.stream-toggle-btn:hover {
+  background: rgba(255, 51, 51, 0.15);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr 280px;
+  }
+  .map-panel { grid-column: 1 / 2; }
+  .news-panel { grid-column: 2; }
+  .aircraft-stats { grid-column: 1; }
+  .ship-stats { display: none; }
+  .events-panel { grid-column: 2; }
+}
+
+/* Mobile layout */
+@media (max-width: 768px) {
+  .top-bar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 4px 8px;
+  }
+  .top-bar-center .title {
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+  .classification { display: none; }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto auto auto;
+  }
+  .map-panel { grid-column: 1; grid-row: 1; }
+  .news-panel { grid-column: 1; grid-row: 2; max-height: 200px; }
+  .aircraft-stats { grid-column: 1; grid-row: 3; }
+  .ship-stats { grid-column: 1; grid-row: 4; display: block; }
+  .events-panel { grid-column: 1; grid-row: 5; }
+
+  html, body {
+    overflow-y: auto;
+  }
+
+  .map-controls {
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+  .ctrl-btn {
+    font-size: 8px;
+    padding: 2px 4px;
+  }
+
+  .stream-panel {
+    width: 90vw;
+    height: 200px;
+    bottom: 60px;
+    right: 5vw;
+  }
+  .stream-toggle-btn {
+    bottom: 20px;
+    right: 10px;
+  }
+}
