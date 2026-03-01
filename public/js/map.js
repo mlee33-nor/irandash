@@ -45,6 +45,22 @@ const MapModule = (function () {
     { name: 'MEHRABAD AFB', lat: 35.69, lng: 51.31, country: 'Iran', type: 'airbase', desc: 'IRIAF transport wing. C-130, Il-76. Tehran air defense sector.' },
     { name: 'TACTICAL AB DEZFUL', lat: 32.43, lng: 48.38, country: 'Iran', type: 'airbase', desc: 'IRIAF F-4E, Su-22. Western front. Iraq border operations.' },
     { name: 'ADEN PORT', lat: 12.80, lng: 45.02, country: 'Yemen', type: 'naval', desc: 'Coalition naval ops. UAE-aligned forces. Red Sea chokepoint control.' },
+    // Military ground bases
+    { name: 'PARCHIN MILITARY COMPLEX', lat: 35.52, lng: 51.77, country: 'Iran', type: 'military', desc: 'IRGC weapons R&D. Suspected nuclear weapons testing. High-explosive test chambers.' },
+    { name: 'NATANZ ENRICHMENT FACILITY', lat: 33.51, lng: 51.73, country: 'Iran', type: 'military', desc: 'Primary uranium enrichment site. Underground centrifuge halls. Stuxnet target 2010.' },
+    { name: 'FORDOW ENRICHMENT PLANT', lat: 34.88, lng: 51.59, country: 'Iran', type: 'military', desc: 'Hardened underground enrichment. Built inside mountain near Qom. 60% enrichment.' },
+    { name: 'IRGC HQ TEHRAN', lat: 35.70, lng: 51.42, country: 'Iran', type: 'military', desc: 'Islamic Revolutionary Guard Corps headquarters. Command & control center.' },
+    { name: 'SHAHROUD MISSILE BASE', lat: 36.42, lng: 55.02, country: 'Iran', type: 'military', desc: 'IRGC Aerospace Force. Shahab-3, Emad, Khorramshahr ballistic missiles. Space launch.' },
+    { name: 'IMAM ALI BASE', lat: 34.55, lng: 45.75, country: 'Iraq', type: 'military', desc: 'IRGC-linked Iraqi PMF base. Iran weapons transfer hub near Syria border.' },
+    { name: 'PALMYRA / T4 AIRBASE', lat: 34.52, lng: 37.63, country: 'Syria', type: 'military', desc: 'IRGC drone operations. Repeatedly struck by Israel. Iran forward staging.' },
+    { name: 'DIMONA NUCLEAR CENTER', lat: 31.00, lng: 35.14, country: 'Israel', type: 'military', desc: 'Negev Nuclear Research Center. Plutonium production reactor. Israel nuclear arsenal.' },
+    { name: 'IDF NORTHERN COMMAND', lat: 32.79, lng: 35.53, country: 'Israel', type: 'military', desc: 'IDF Northern Command HQ. Lebanon/Syria front. Galilee Div, 36th Div ops.' },
+    { name: 'IDF SOUTHERN COMMAND', lat: 31.25, lng: 34.79, country: 'Israel', type: 'military', desc: 'IDF Southern Command. Gaza operations. 162nd Div, 252nd Div. Rafah crossing ops.' },
+    { name: 'KING ABDULAZIZ AB', lat: 26.27, lng: 50.15, country: 'Saudi Arabia', type: 'military', desc: 'RSAF F-15SA Eagles. Eastern Province air defense. Gulf coalition ops.' },
+    { name: 'PRINCE SULTAN AB', lat: 24.06, lng: 47.58, country: 'Saudi Arabia', type: 'military', desc: 'CENTCOM combined air ops center. US Patriot batteries. THAAD deployment.' },
+    { name: 'AL TANF GARRISON', lat: 33.51, lng: 38.97, country: 'Syria', type: 'military', desc: 'US SOF outpost. 55km deconfliction zone. Blocks Iran land bridge to Mediterranean.' },
+    { name: 'ERBIL US CONSULATE BASE', lat: 36.19, lng: 44.01, country: 'Iraq', type: 'military', desc: 'US forces compound. C-RAM air defense. Targeted by Iran-backed drones/rockets.' },
+    { name: 'AIN AL ASAD AB', lat: 33.80, lng: 42.44, country: 'Iraq', type: 'military', desc: 'US/Coalition air base. Struck by Iran IRGC ballistic missiles Jan 2020.' },
   ];
 
 
@@ -87,15 +103,20 @@ const MapModule = (function () {
 
   function drawNavalBases() {
     NAVAL_BASES.forEach(base => {
-      const isNaval = base.type === 'naval';
-      const color = isNaval ? '#3399ff' : '#ffaa00';
-      const symbol = isNaval ? '\u2693' : '\u2708';
+      let color, symbol;
+      if (base.type === 'naval') {
+        color = '#3399ff'; symbol = '\u2693'; // anchor
+      } else if (base.type === 'airbase') {
+        color = '#ffaa00'; symbol = '\uD83D\uDEEC'; // landing/runway 🛬
+      } else {
+        color = '#ef4444'; symbol = '\uD83E\uDE96'; // military helmet 🪖
+      }
 
       const icon = L.divIcon({
         className: 'marker-base',
-        html: `<div class="base-marker" style="color:${color};text-shadow:0 0 8px ${color}">${symbol}</div>`,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
+        html: `<div class="base-marker" style="color:${color};text-shadow:0 0 8px ${color};font-size:17px">${symbol}</div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
       });
 
       const marker = L.marker([base.lat, base.lng], { icon })
