@@ -6,12 +6,24 @@
   let reconnectDelay = 1000;
   let eventsData = [];
   let conflictsData = [];
+  let strikesData = [];
+  let earthquakesData = [];
+  let weatherData = {};
+  let aircraftData = [];
+  let shipsData = [];
+  let newsData = [];
+  let polymarketData = [];
 
   // Initialize
   startClock();
   MapModule.init();
+  ConsoleModule.init();
   connectWebSocket();
-  initLiveStream();
+  initKeyboardShortcuts();
+  initSitrep();
+  initAmbientAudio();
+  initSigintFeed();
+  initAlertSounds();
 
   function connectWebSocket() {
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -49,10 +61,17 @@
 
   function handleMessage(msg) {
     const { type, data } = msg;
-    if (!data || !Array.isArray(data)) return;
+    if (!data) return;
+    if (type === 'polymarket') {
+      polymarketData = Array.isArray(data) ? data : [];
+      renderPolymarket(polymarketData);
+      return;
+    }
+    if (!Array.isArray(data)) return;
 
     switch (type) {
       case 'news':
+        newsData = data;
         NewsModule.update(data);
         MapModule.updateNewsMarkers(data);
         pulseIndicator('dp-news');
@@ -61,20 +80,26 @@
         updateThreatLevel(data);
         checkBreaking(data);
         bumpActivity();
+        playDataBlip('news');
         break;
 
       case 'aircraft':
+        aircraftData = data;
         MapModule.updateAircraft(data);
         SidebarModule.updateAircraftStats(data);
+        MapModule.checkProximityAlerts(data);
         pulseIndicator('dp-air');
         bumpActivity();
+        playDataBlip('aircraft');
         break;
 
       case 'ships':
+        shipsData = data;
         MapModule.updateShips(data);
         SidebarModule.updateShipStats(data);
         pulseIndicator('dp-sea');
         bumpActivity();
+        playDataBlip('ships');
         break;
 
       case 'events':
@@ -82,6 +107,7 @@
         MapModule.updateEvents(data);
         SidebarModule.updateEventStats(eventsData, conflictsData);
         SidebarModule.updateTimeline(eventsData, conflictsData);
+        MapModule.updateHeatmap(conflictsData, eventsData, strikesData);
         break;
 
       case 'conflicts':
@@ -89,12 +115,49 @@
         MapModule.updateConflicts(data);
         SidebarModule.updateEventStats(eventsData, conflictsData);
         SidebarModule.updateTimeline(eventsData, conflictsData);
+        MapModule.updateHeatmap(conflictsData, eventsData, strikesData);
         break;
 
       case 'strikes':
+        // Detect new strikes and animate missile arcs
+        const newStrikes = data.filter(s => !strikesData.find(old => old.lat === s.lat && old.lng === s.lng));
+        strikesData = data;
         MapModule.updateDynamicStrikes(data);
         pulseIndicator('dp-strikes');
         updateStrikeCount(data);
+        MapModule.updateHeatmap(conflictsData, eventsData, strikesData);
+        // Animate arcs for newly detected strikes
+        newStrikes.forEach(s => {
+          // Guess origin based on target country
+          let originLat = 36.42, originLng = 55.02; // Default: Shahroud (Iran)
+          if (s.name && /iran/i.test(s.name)) {
+            originLat = 31.21; originLng = 34.93; // Nevatim (Israel)
+          }
+          MapModule.showMissileArc(originLat, originLng, s.lat, s.lng, s.name || 'STRIKE');
+        });
+        playEscalatedAlert('critical');
+        break;
+
+      case 'earthquakes':
+        earthquakesData = data;
+        MapModule.updateEarthquakes(data);
+        // Check for nuclear proximity alerts
+        data.forEach(q => {
+          if (q.nearNuclear) {
+            triggerSeismicAlert(q);
+          }
+        });
+        bumpActivity();
+        break;
+
+      case 'weather':
+        weatherData = data;
+        MapModule.updateWeather(data);
+        bumpActivity();
+        break;
+
+      case 'aircraftTrails':
+        MapModule.updateTrails(data);
         break;
     }
   }
@@ -237,84 +300,413 @@
     }
   }
 
-  // Live stream functionality
-  function initLiveStream() {
-    const streamToggle = document.getElementById('stream-toggle');
-    const streamPanel = document.getElementById('stream-panel');
-    const streamClose = document.getElementById('stream-close');
-    const streamSelect = document.getElementById('stream-select');
-    const streamFrame = document.getElementById('stream-frame');
+  // Seismic alert near nuclear facility
+  function triggerSeismicAlert(quake) {
+    const banner = document.getElementById('breaking-banner');
+    const text = document.getElementById('breaking-text');
+    if (!banner || !text) return;
+    text.textContent = `SEISMIC EVENT NEAR ${quake.nearNuclear.site} - MAG ${quake.magnitude} - ${quake.nearNuclear.distKm}KM FROM FACILITY`;
+    banner.classList.add('visible');
+    playAlertSound();
+    playCriticalAlert();
+    setTimeout(() => banner.classList.remove('visible'), 30000);
+  }
 
-    if (!streamToggle) return;
+  // === KEYBOARD SHORTCUTS ===
+  function initKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      // Don't trigger if typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
 
-    const streams = {
-      'aljazeera': 'https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=1&mute=1',
-      'france24': 'https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=1&mute=1',
-      'dw': 'https://www.youtube.com/embed/LuKwFajn37U?autoplay=1&mute=1',
-      'sky': 'https://www.youtube.com/embed/YDvsBbKfLPA?autoplay=1&mute=1',
-    };
-
-    streamToggle.addEventListener('click', () => {
-      streamPanel.classList.toggle('visible');
-      if (streamPanel.classList.contains('visible') && !streamFrame.src) {
-        streamFrame.src = streams[streamSelect.value] || streams['aljazeera'];
+      if (e.key === '`') {
+        e.preventDefault();
+        ConsoleModule.toggle();
+      } else if (e.key === 'm' || e.key === 'M') {
+        const btn = document.getElementById('measure-btn');
+        if (btn) btn.click();
+      } else if (e.key === 'Escape') {
+        // Close measure mode
+        const btn = document.getElementById('measure-btn');
+        if (btn && btn.classList.contains('active')) {
+          btn.click();
+        }
+        // Close console
+        const consoleEl = document.getElementById('console-overlay');
+        if (consoleEl && consoleEl.classList.contains('visible')) {
+          ConsoleModule.toggle();
+        }
+        // Clear measurement
+        MapModule.clearMeasurement();
       }
     });
+  }
 
-    streamClose.addEventListener('click', () => {
-      streamPanel.classList.remove('visible');
-      streamFrame.src = '';
+  // === SITREP GENERATOR ===
+  function initSitrep() {
+    const btn = document.getElementById('sitrep-btn');
+    const modal = document.getElementById('sitrep-modal');
+    const closeBtn = document.getElementById('sitrep-close');
+    const copyBtn = document.getElementById('sitrep-copy');
+    if (!btn || !modal) return;
+
+    btn.addEventListener('click', () => {
+      generateSitrep();
+      modal.classList.add('visible');
     });
 
-    streamSelect.addEventListener('change', () => {
-      streamFrame.src = streams[streamSelect.value] || streams['aljazeera'];
+    closeBtn?.addEventListener('click', () => {
+      modal.classList.remove('visible');
     });
 
-    // Make stream panel draggable
-    let isDragging = false;
-    let dragOffsetX = 0;
-    let dragOffsetY = 0;
-    const streamHeader = document.getElementById('stream-header');
-
-    streamHeader.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      dragOffsetX = e.clientX - streamPanel.offsetLeft;
-      dragOffsetY = e.clientY - streamPanel.offsetTop;
-      streamPanel.style.transition = 'none';
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('visible');
     });
 
-    document.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      streamPanel.style.left = (e.clientX - dragOffsetX) + 'px';
-      streamPanel.style.top = (e.clientY - dragOffsetY) + 'px';
-      streamPanel.style.right = 'auto';
-      streamPanel.style.bottom = 'auto';
+    copyBtn?.addEventListener('click', () => {
+      const body = document.getElementById('sitrep-body');
+      if (body) {
+        navigator.clipboard.writeText(body.textContent).then(() => {
+          copyBtn.textContent = 'COPIED';
+          setTimeout(() => { copyBtn.textContent = 'COPY TO CLIPBOARD'; }, 2000);
+        });
+      }
     });
+  }
 
-    document.addEventListener('mouseup', () => {
-      isDragging = false;
-    });
+  function generateSitrep() {
+    const body = document.getElementById('sitrep-body');
+    if (!body) return;
 
-    // Touch support for mobile
-    streamHeader.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      const touch = e.touches[0];
-      dragOffsetX = touch.clientX - streamPanel.offsetLeft;
-      dragOffsetY = touch.clientY - streamPanel.offsetTop;
-      streamPanel.style.transition = 'none';
-    });
+    const now = new Date();
+    const threatEl = document.getElementById('threat-level');
+    const threat = threatEl ? threatEl.textContent : 'UNKNOWN';
+    const militaryAircraft = aircraftData.filter(a => a.military);
+    const criticalNews = newsData.filter(a => a.severity === 'critical').slice(0, 5);
+    const highNews = newsData.filter(a => a.severity === 'high').slice(0, 5);
 
-    document.addEventListener('touchmove', (e) => {
-      if (!isDragging) return;
-      const touch = e.touches[0];
-      streamPanel.style.left = (touch.clientX - dragOffsetX) + 'px';
-      streamPanel.style.top = (touch.clientY - dragOffsetY) + 'px';
-      streamPanel.style.right = 'auto';
-      streamPanel.style.bottom = 'auto';
-    });
+    let report = '';
+    report += `SITUATION REPORT (SITREP)\n`;
+    report += `${'='.repeat(50)}\n`;
+    report += `DTG: ${now.toUTCString()}\n`;
+    report += `CLASSIFICATION: UNCLASSIFIED // FOUO\n`;
+    report += `THEATER: IRAN / MIDDLE EAST\n\n`;
 
-    document.addEventListener('touchend', () => {
-      isDragging = false;
+    report += `1. THREAT ASSESSMENT\n`;
+    report += `${'─'.repeat(40)}\n`;
+    report += `   Overall Threat Level: ${threat}\n`;
+    report += `   Strikes Detected: ${strikesData.length}\n`;
+    report += `   Active Conflicts: ${conflictsData.length}\n`;
+    report += `   Tracked Events: ${eventsData.length}\n\n`;
+
+    report += `2. AIR PICTURE\n`;
+    report += `${'─'.repeat(40)}\n`;
+    report += `   Total Aircraft Tracked: ${aircraftData.length}\n`;
+    report += `   Military Aircraft: ${militaryAircraft.length}\n`;
+    if (militaryAircraft.length > 0) {
+      militaryAircraft.slice(0, 8).forEach(a => {
+        report += `   - ${a.callsign || 'UNK'} (${a.country}) ALT:${a.altitude ? Math.round(a.altitude) + 'm' : 'N/A'} HDG:${a.heading ? Math.round(a.heading) + '\u00B0' : 'N/A'}\n`;
+      });
+    }
+    report += '\n';
+
+    report += `3. MARITIME PICTURE\n`;
+    report += `${'─'.repeat(40)}\n`;
+    report += `   Vessels Tracked: ${shipsData.length}\n`;
+    if (shipsData.length > 0) {
+      shipsData.slice(0, 5).forEach(s => {
+        report += `   - ${s.name || 'UNK'} (${s.flag}) ${s.type} @ ${s.speed}kts\n`;
+      });
+    }
+    report += `\n`;
+
+    if (strikesData.length > 0) {
+      report += `4. STRIKE ACTIVITY\n`;
+      report += `${'─'.repeat(40)}\n`;
+      strikesData.slice(0, 5).forEach(s => {
+        report += `   - ${s.name}: ${(s.title || s.desc || '').slice(0, 80)}\n`;
+      });
+      report += `\n`;
+    }
+
+    if (earthquakesData.length > 0) {
+      report += `5. SEISMIC ACTIVITY\n`;
+      report += `${'─'.repeat(40)}\n`;
+      earthquakesData.slice(0, 3).forEach(q => {
+        report += `   - MAG ${q.magnitude} @ ${q.place}${q.nearNuclear ? ' [NEAR ' + q.nearNuclear.site + ']' : ''}\n`;
+      });
+      report += `\n`;
+    }
+
+    report += `6. KEY DEVELOPMENTS\n`;
+    report += `${'─'.repeat(40)}\n`;
+    if (criticalNews.length > 0) {
+      report += `   CRITICAL:\n`;
+      criticalNews.forEach(n => {
+        report += `   - ${(n.title || '').slice(0, 90)}\n`;
+      });
+    }
+    if (highNews.length > 0) {
+      report += `   HIGH:\n`;
+      highNews.forEach(n => {
+        report += `   - ${(n.title || '').slice(0, 90)}\n`;
+      });
+    }
+    report += `\n`;
+    report += `${'='.repeat(50)}\n`;
+    report += `END SITREP // ${now.toISOString()}\n`;
+
+    // Typewriter effect
+    body.textContent = '';
+    let idx = 0;
+    const typeSpeed = 2;
+    function typeChar() {
+      if (idx < report.length) {
+        const chunk = report.slice(idx, idx + 3);
+        body.textContent += chunk;
+        idx += 3;
+        body.scrollTop = body.scrollHeight;
+        setTimeout(typeChar, typeSpeed);
+      }
+    }
+    typeChar();
+  }
+
+  // === AUDIO AMBIANCE ===
+  let ambientCtx = null;
+  let ambientHum = null;
+  let ambientGain = null;
+  let ambientEnabled = false;
+
+  function initAmbientAudio() {
+    // Extend existing sound toggle to include ambient mode
+    // Double-click sound toggle to enable ambient mode
+    const soundToggle = document.getElementById('sound-toggle');
+    if (soundToggle) {
+      soundToggle.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        ambientEnabled = !ambientEnabled;
+        if (ambientEnabled) {
+          startAmbientHum();
+          soundToggle.style.borderColor = '#06b6d4';
+        } else {
+          stopAmbientHum();
+          soundToggle.style.borderColor = '';
+        }
+      });
+    }
+  }
+
+  function startAmbientHum() {
+    try {
+      if (!ambientCtx) ambientCtx = new (window.AudioContext || window.webkitAudioContext)();
+      ambientHum = ambientCtx.createOscillator();
+      ambientGain = ambientCtx.createGain();
+      ambientHum.connect(ambientGain);
+      ambientGain.connect(ambientCtx.destination);
+      ambientHum.frequency.value = 40;
+      ambientHum.type = 'sine';
+      ambientGain.gain.value = 0.015;
+      ambientHum.start();
+    } catch (e) {}
+  }
+
+  function stopAmbientHum() {
+    try {
+      if (ambientHum) { ambientHum.stop(); ambientHum = null; }
+    } catch (e) {}
+  }
+
+  function playDataBlip(type) {
+    if (!soundEnabled && !ambientEnabled) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      gain.gain.value = 0.03;
+
+      if (type === 'aircraft') {
+        osc.frequency.value = 1200;
+        osc.type = 'sine';
+      } else if (type === 'ships') {
+        osc.frequency.value = 200;
+        osc.type = 'sine';
+      } else {
+        osc.frequency.value = 800;
+        osc.type = 'square';
+        gain.gain.value = 0.015;
+      }
+      osc.start();
+      osc.stop(ctx.currentTime + 0.06);
+    } catch (e) {}
+  }
+
+  function playCriticalAlert() {
+    if (!soundEnabled && !ambientEnabled) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [600, 900, 1200].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        gain.gain.value = 0.06;
+        osc.start(ctx.currentTime + i * 0.2);
+        osc.stop(ctx.currentTime + i * 0.2 + 0.15);
+      });
+    } catch (e) {}
+  }
+
+  // Live stream functionality removed - theater page handles streams directly
+
+  // === POLYMARKET PANEL ===
+  function renderPolymarket(markets) {
+    const feed = document.getElementById('polymarket-feed');
+    if (!feed) return;
+    if (!markets || markets.length === 0) {
+      feed.innerHTML = '<div class="poly-empty">Searching for Iran-related markets...</div>';
+      return;
+    }
+    feed.innerHTML = markets.map(m => {
+      const yesOutcome = m.outcomes.find(o => o.name === 'Yes');
+      const noOutcome = m.outcomes.find(o => o.name === 'No');
+      const yesPct = yesOutcome ? yesOutcome.pct : '--';
+      const noPct = noOutcome ? noOutcome.pct : '--';
+      const yesPrice = yesOutcome ? yesOutcome.price : 0;
+      const barWidth = Math.round(yesPrice * 100);
+      const vol = m.volume > 1000000 ? `$${(m.volume / 1000000).toFixed(1)}M` : m.volume > 1000 ? `$${(m.volume / 1000).toFixed(0)}K` : `$${Math.round(m.volume)}`;
+      const endDate = m.endDate ? new Date(m.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+
+      return `<div class="poly-market" onclick="window.open('${escapeHtml(m.url)}','_blank')">
+        <div class="poly-title">${escapeHtml(m.title)}</div>
+        <div class="poly-bar-wrap">
+          <div class="poly-bar-yes" style="width:${barWidth}%"></div>
+        </div>
+        <div class="poly-odds">
+          <span class="poly-yes">YES ${yesPct}</span>
+          <span class="poly-no">NO ${noPct}</span>
+        </div>
+        <div class="poly-meta">
+          <span class="poly-vol">VOL ${vol}</span>
+          ${endDate ? `<span class="poly-end">ENDS ${endDate}</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // === SIGINT COMMS INTERCEPT FEED ===
+  function initSigintFeed() {
+    const feed = document.getElementById('sigint-feed');
+    if (!feed) return;
+
+    const bands = ['HF 3.5MHz', 'VHF 118.0MHz', 'UHF 243.0MHz', 'UHF 340.2MHz', 'HF 6.7MHz', 'VHF 156.8MHz', 'UHF 225.0MHz', 'HF 8.9MHz'];
+    const callsigns = ['DARKSTAR', 'VIPER-6', 'SABRE ACTUAL', 'EAGLE-3', 'OVERLORD', 'WARHOUND', 'SHADOW-9', 'THUNDER-1', 'GUARDIAN', 'RAPTOR-5', 'ANVIL', 'REAPER-2'];
+    const prefixes = ['//FLASH//', '//ROUTINE//', '//PRIORITY//', '//IMMEDIATE//'];
+    const contents = [
+      'FREQ CHANGE AUTH... SWITCHING TO ALT COMMS',
+      'CONTACT BEARING 045 RANGE 120NM ANGELS 35',
+      'AUTHENTICATE ALPHA BRAVO... CONFIRMED',
+      'RTB ORDERED... BINGO FUEL STATE',
+      'EYES ON TARGET... AWAITING ROE CLEARANCE',
+      'JAMMING DETECTED BAND 3... COUNTERMEASURES ACTIVE',
+      'MOVEMENT GRID 38TQM... 3X VEHICLES SOUTHBOUND',
+      'CROSSING ADIZ... SQUAWK CHANGE 7700',
+      'PACKAGE INBOUND... ETA 15 MIKES',
+      'SPLASH ONE... TARGET NEUTRALIZED',
+      'COMMS CHECK... ALL STATIONS REPORT',
+      'INTEL SUGGESTS ACTIVITY AT KNOWN SITE...',
+      'SCRAMBLE ALERT... CONDITION RED',
+      'MISSION ABORT CODE RECEIVED... RTB',
+      'RADAR CONTACT LOST... LAST KNOWN POS...',
+      'SAR ACTIVATED... SEARCH SECTOR DELTA',
+      'HOSTILE EMITTERS DETECTED... BEARING 270',
+      'CLASSIFIED TRAFFIC... ENCRYPTING...',
+    ];
+
+    function genHexBlock(len) {
+      return Array.from({ length: len }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    }
+
+    function addIntercept() {
+      const band = bands[Math.floor(Math.random() * bands.length)];
+      const call = callsigns[Math.floor(Math.random() * callsigns.length)];
+      const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+      const content = contents[Math.floor(Math.random() * contents.length)];
+      const encrypted = Math.random() > 0.6;
+      const now = new Date();
+      const ts = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'UTC' });
+
+      const div = document.createElement('div');
+      div.className = 'sigint-entry' + (prefix === '//FLASH//' ? ' sigint-flash' : '');
+      div.innerHTML = `<span class="sigint-ts">${ts}Z</span> <span class="sigint-band">[${band}]</span> <span class="sigint-call">${call}</span> ${prefix} ${encrypted ? `<span class="sigint-encrypted">[ENCRYPTED] ${genHexBlock(8)}</span>` : `<span class="sigint-clear">${content}</span>`}`;
+
+      feed.insertBefore(div, feed.firstChild);
+      if (feed.children.length > 50) feed.removeChild(feed.lastChild);
+    }
+
+    // Seed initial entries
+    for (let i = 0; i < 8; i++) addIntercept();
+    // Add new intercepts at random intervals
+    setInterval(addIntercept, 4000 + Math.random() * 6000);
+  }
+
+  // === ALERT SOUND ESCALATION ===
+  let alertSoundsReady = false;
+  function initAlertSounds() {
+    alertSoundsReady = true;
+    // Listen for proximity alerts
+    document.addEventListener('proximityAlert', (e) => {
+      playEscalatedAlert('high');
     });
+  }
+
+  function playEscalatedAlert(level) {
+    if (!soundEnabled && !ambientEnabled) return;
+    if (!alertSoundsReady) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+      if (level === 'critical') {
+        // Klaxon: alternating high/low tones
+        [880, 440, 880, 440].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = freq;
+          osc.type = 'sawtooth';
+          gain.gain.value = 0.06;
+          osc.start(ctx.currentTime + i * 0.2);
+          osc.stop(ctx.currentTime + i * 0.2 + 0.18);
+        });
+      } else if (level === 'high') {
+        // Two-tone warning
+        [660, 880].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = freq;
+          osc.type = 'sine';
+          gain.gain.value = 0.05;
+          osc.start(ctx.currentTime + i * 0.15);
+          osc.stop(ctx.currentTime + i * 0.15 + 0.12);
+        });
+      } else {
+        // Subtle ping
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 1000;
+        osc.type = 'sine';
+        gain.gain.value = 0.03;
+        osc.start();
+        osc.stop(ctx.currentTime + 0.08);
+      }
+    } catch (e) {}
   }
 })();

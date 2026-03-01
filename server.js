@@ -10,6 +10,9 @@ const gdeltScraper = require('./scrapers/gdelt');
 const conflictsScraper = require('./scrapers/conflicts');
 const strikesScraper = require('./scrapers/strikes');
 const twitterScraper = require('./scrapers/twitter');
+const earthquakeScraper = require('./scrapers/earthquakes');
+const weatherScraper = require('./scrapers/weather');
+const polymarketScraper = require('./scrapers/polymarket');
 
 // Iranian targets for news-based strike detection
 const IRAN_STRIKE_LOCATIONS = {
@@ -90,8 +93,15 @@ const latestData = {
   ships: [],
   events: [],
   conflicts: [],
-  strikes: []
+  strikes: [],
+  earthquakes: [],
+  weather: { stations: [], downwindVectors: [] },
+  polymarket: []
 };
+
+// Aircraft trail history buffer - last 20 positions per aircraft
+const aircraftTrails = {};
+const MAX_TRAIL_POSITIONS = 20;
 
 // Broadcast to all connected clients
 function broadcast(type, data) {
@@ -109,9 +119,18 @@ wss.on('connection', (ws) => {
 
   // Send all current data to new client
   for (const [type, data] of Object.entries(latestData)) {
-    if (data.length > 0) {
+    if (type === 'weather') {
+      if (data.stations.length > 0) {
+        ws.send(JSON.stringify({ type, data, timestamp: Date.now() }));
+      }
+    } else if (Array.isArray(data) && data.length > 0) {
       ws.send(JSON.stringify({ type, data, timestamp: Date.now() }));
     }
+  }
+  // Send aircraft trails
+  const trailData = Object.entries(aircraftTrails).map(([id, t]) => ({ id, positions: t.positions, military: t.military }));
+  if (trailData.length > 0) {
+    ws.send(JSON.stringify({ type: 'aircraftTrails', data: trailData, timestamp: Date.now() }));
   }
 
   ws.on('close', () => console.log('Client disconnected'));
@@ -177,11 +196,87 @@ function startScrapers() {
   runNews();
   setInterval(runNews, 2 * 60 * 1000); // 2 min
 
-  runScraper('aircraft', aircraftScraper, 30 * 1000);       // 30 sec
+  // Aircraft scraper - also updates trail history
+  async function runAircraft() {
+    try {
+      const data = await aircraftScraper();
+      if (data && data.length > 0) {
+        latestData.aircraft = data;
+        broadcast('aircraft', data);
+        console.log(`[aircraft] ${data.length} items`);
+
+        // Update trail history
+        const now = Date.now();
+        for (const a of data) {
+          if (!a.lat || !a.lng) continue;
+          const id = a.icao24;
+          if (!aircraftTrails[id]) {
+            aircraftTrails[id] = { positions: [], military: !!a.military };
+          }
+          const trail = aircraftTrails[id];
+          trail.military = !!a.military;
+          trail.positions.push({ lat: a.lat, lng: a.lng, alt: a.altitude, t: now });
+          if (trail.positions.length > MAX_TRAIL_POSITIONS) {
+            trail.positions.shift();
+          }
+          trail.lastSeen = now;
+        }
+        // Prune stale trails (not seen in 10 min)
+        for (const id of Object.keys(aircraftTrails)) {
+          if (now - aircraftTrails[id].lastSeen > 10 * 60 * 1000) {
+            delete aircraftTrails[id];
+          }
+        }
+        // Broadcast trails
+        const trailData = Object.entries(aircraftTrails).map(([id, t]) => ({ id, positions: t.positions, military: t.military }));
+        broadcast('aircraftTrails', trailData);
+      }
+    } catch (err) {
+      console.error('[aircraft] Error:', err.message);
+    }
+  }
+  runAircraft();
+  setInterval(runAircraft, 30 * 1000);
+
   runScraper('ships', shipsScraper, 60 * 1000);              // 60 sec
   runScraper('events', gdeltScraper, 15 * 60 * 1000);     // 15 min
   runScraper('conflicts', conflictsScraper, 2 * 60 * 1000); // 2 min
   runScraper('strikes', strikesScraper, 10 * 60 * 1000);    // 10 min
+
+  // Earthquake scraper
+  runScraper('earthquakes', earthquakeScraper, 5 * 60 * 1000); // 5 min
+
+  // Weather scraper
+  async function runWeather() {
+    try {
+      const data = await weatherScraper();
+      if (data && data.stations && data.stations.length > 0) {
+        latestData.weather = data;
+        broadcast('weather', data);
+        console.log(`[weather] ${data.stations.length} stations, ${data.downwindVectors.length} vectors`);
+      }
+    } catch (err) {
+      console.error('[weather] Error:', err.message);
+    }
+  }
+  runWeather();
+  setInterval(runWeather, 15 * 60 * 1000); // 15 min
+
+  // Polymarket prediction markets
+  async function runPolymarket() {
+    try {
+      const data = await polymarketScraper();
+      if (data && data.length > 0) {
+        latestData.polymarket = data;
+        broadcast('polymarket', data);
+        console.log(`[polymarket] ${data.length} markets`);
+      }
+    } catch (e) {
+      console.error('[polymarket] Error:', e.message);
+    }
+  }
+  setTimeout(runPolymarket, 20000);
+  setInterval(runPolymarket, 5 * 60 * 1000); // 5 min
 
   // Twitter/X feed - merge into news, also detect strikes
   async function runTwitter() {

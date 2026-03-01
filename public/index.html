@@ -22,23 +22,6 @@
     </div>
   </div>
 
-
-  <!-- Breaking news flash banner -->
-  <div class="breaking-banner" id="breaking-banner">
-    <span class="breaking-banner-tag">BREAKING</span>
-    <span class="breaking-banner-text" id="breaking-text"></span>
-    <button class="breaking-banner-close" id="breaking-close">&times;</button>
-  </div>
-
-  <!-- Strike counter -->
-  <div class="strike-counter">
-    <div class="strike-counter-label">STRIKES DETECTED</div>
-    <div class="strike-counter-value" id="strike-count">0</div>
-  </div>
-
-  <!-- Coordinates readout -->
-  <div class="coords-readout" id="coords-readout">LAT 32.0000 | LNG 52.0000</div>
-
   <!-- Top bar -->
   <header class="top-bar">
     <div class="top-bar-left">
@@ -60,213 +43,334 @@
         <div class="data-pulse-row"><div class="data-pulse-dot" id="dp-strikes"></div>ST</div>
         <div class="data-pulse-row"><div class="data-pulse-dot" id="dp-osint"></div>X</div>
       </div>
-      <span class="clock" id="clock"></span>
+      <div class="theater-clocks" id="theater-clocks">
+        <div class="theater-clock"><span class="tc-label">ZULU</span><span class="tc-time" id="tc-utc">--:--:--</span></div>
+        <div class="theater-clock"><span class="tc-label">DC</span><span class="tc-time" id="tc-dc">--:--</span></div>
+        <div class="theater-clock"><span class="tc-label">TLV</span><span class="tc-time" id="tc-tlv">--:--</span></div>
+        <div class="theater-clock"><span class="tc-label">THR</span><span class="tc-time" id="tc-thr">--:--</span></div>
+      </div>
       <div class="activity-spark" id="activity-spark"></div>
+      <button class="sitrep-btn" id="sitrep-btn" title="Generate SITREP">SITREP</button>
       <button class="sound-toggle" id="sound-toggle" title="Alert sounds">&#128264;</button>
       <span class="ws-status" id="ws-status">&#9679; CONNECTING</span>
     </div>
   </header>
 
-  <!-- Main grid -->
-  <div class="dashboard-grid">
-    <!-- Map panel -->
-    <div class="panel map-panel">
-      <div class="panel-header">
-        <span class="panel-title">&#9650; TACTICAL MAP</span>
-        <div class="map-controls">
-          <button class="ctrl-btn active" data-layer="aircraft">AIR</button>
-          <button class="ctrl-btn active" data-layer="ships">SEA</button>
-          <button class="ctrl-btn active" data-layer="events">EVENTS</button>
-          <button class="ctrl-btn active" data-layer="conflicts">CONFLICT</button>
-          <button class="ctrl-btn active" data-layer="news">NEWS</button>
-          <button class="ctrl-btn active" data-layer="bases">BASES</button>
-          <button class="ctrl-btn active" data-layer="strikes">STRIKES</button>
-        </div>
-      </div>
-      <div id="map"></div>
+  <!-- Page Navigation Bar -->
+  <nav class="page-nav">
+    <button class="page-tab active" data-page="map">&#9650; MAP</button>
+    <button class="page-tab" data-page="theater">&#9654; THEATER</button>
+    <button class="page-tab" data-page="odds">&#128200; ODDS</button>
+    <button class="page-tab" data-page="intel">&#128225; INTEL</button>
+  </nav>
+
+  <!-- ===== PAGE: MAP ===== -->
+  <div class="page active" id="page-map">
+    <!-- Strike counter -->
+    <div class="strike-counter">
+      <div class="strike-counter-label">STRIKES DETECTED</div>
+      <div class="strike-counter-value" id="strike-count">0</div>
     </div>
 
-    <!-- News feed panel - resizable -->
-    <div class="panel news-panel" id="news-panel">
-      <div class="news-drag-handle" id="news-drag-handle"></div>
-      <div class="news-panel-inner">
+    <!-- Coordinates readout -->
+    <div class="coords-readout" id="coords-readout">LAT 32.0000 | LNG 52.0000</div>
+
+    <!-- Main grid -->
+    <div class="dashboard-grid">
+      <!-- Map panel -->
+      <div class="panel map-panel">
         <div class="panel-header">
-          <span class="panel-title">&#9654; LIVE INTELLIGENCE FEED</span>
-          <span class="item-count" id="news-count">0</span>
+          <span class="panel-title">&#9650; TACTICAL MAP</span>
+          <div class="map-controls">
+            <button class="ctrl-btn active" data-layer="aircraft">AIR</button>
+            <button class="ctrl-btn active" data-layer="ships">SEA</button>
+            <button class="ctrl-btn active" data-layer="events">EVENTS</button>
+            <button class="ctrl-btn active" data-layer="conflicts">CONFLICT</button>
+            <button class="ctrl-btn active" data-layer="news">NEWS</button>
+            <button class="ctrl-btn active" data-layer="bases">BASES</button>
+            <button class="ctrl-btn active" data-layer="strikes">STRIKES</button>
+            <button class="ctrl-btn" data-layer="earthquakes">SEISMIC</button>
+            <button class="ctrl-btn" data-layer="weather">WX</button>
+            <button class="ctrl-btn" data-layer="heatmap">HEAT</button>
+            <button class="ctrl-btn" data-layer="trails">TRAILS</button>
+            <button class="ctrl-btn" data-layer="measure" id="measure-btn">MEASURE</button>
+            <button class="ctrl-btn" id="sat-toggle-btn">SAT</button>
+          </div>
         </div>
-        <div class="news-tabs">
-          <button class="news-tab active" data-ntab="all">ALL</button>
-          <button class="news-tab" data-ntab="tweets">X / TWEETS</button>
-        </div>
-        <div class="news-feed" id="news-feed"></div>
-        <div class="news-feed tweet-feed" id="tweet-feed" style="display:none;"></div>
+        <div id="map"></div>
       </div>
-    </div>
 
-    <!-- Bottom panels - resizable -->
-    <div class="bottom-section" id="bottom-section">
-      <div class="bottom-drag-handle" id="bottom-drag-handle">
-        <span class="drag-indicator"></span>
-      </div>
-      <div class="bottom-tabs">
-        <button class="btab active" data-btab="webcams">LIVE CAMS</button>
-        <button class="btab" data-btab="channels">NEWS CHANNELS</button>
-        <button class="btab" data-btab="alerts">ALERTS &amp; EVENTS</button>
-      </div>
-      <div class="bottom-content">
-        <!-- Webcams tab - loads immediately since it's the default -->
-        <div class="btab-content active" id="btab-webcams">
-          <div class="webcam-grid">
-            <div class="webcam-card">
-              <div class="webcam-label">BEIRUT - LIVE</div>
-              <iframe src="https://www.youtube.com/embed/gmtlJ_m2r5A?autoplay=0&mute=1" data-src="https://www.youtube.com/embed/gmtlJ_m2r5A?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
-            </div>
-            <div class="webcam-card">
-              <div class="webcam-label">JERUSALEM - LIVE</div>
-              <iframe src="https://www.youtube.com/embed/ITAlerjV8Ro?autoplay=0&mute=1" data-src="https://www.youtube.com/embed/ITAlerjV8Ro?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
-            </div>
-            <div class="webcam-card">
-              <div class="webcam-label">ISRAEL - LIVE</div>
-              <iframe src="https://www.youtube.com/embed/SQ1TFGJOyRk?autoplay=0&mute=1" data-src="https://www.youtube.com/embed/SQ1TFGJOyRk?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
-            </div>
-            <div class="webcam-card">
-              <div class="webcam-label">IRAN / MIDDLE EAST - LIVE</div>
-              <iframe src="https://www.youtube.com/embed/TKdyfoEEWYw?autoplay=0&mute=1" data-src="https://www.youtube.com/embed/TKdyfoEEWYw?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
-            </div>
+      <!-- News feed panel - resizable -->
+      <div class="panel news-panel" id="news-panel">
+        <div class="news-drag-handle" id="news-drag-handle"></div>
+        <div class="news-panel-inner">
+          <div class="panel-header">
+            <span class="panel-title">&#9654; LIVE INTELLIGENCE FEED</span>
+            <span class="item-count" id="news-count">0</span>
           </div>
-        </div>
-        <!-- News Channels tab - lazy loaded -->
-        <div class="btab-content" id="btab-channels">
-          <div class="webcam-grid">
-            <div class="webcam-card">
-              <div class="webcam-label">AL JAZEERA ENGLISH</div>
-              <iframe data-src="https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
-            </div>
-            <div class="webcam-card">
-              <div class="webcam-label">SKY NEWS</div>
-              <iframe data-src="https://www.youtube.com/embed/YDvsBbKfLPA?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
-            </div>
-            <div class="webcam-card">
-              <div class="webcam-label">DW NEWS</div>
-              <iframe data-src="https://www.youtube.com/embed/LuKwFajn37U?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
-            </div>
-            <div class="webcam-card">
-              <div class="webcam-label">FOX NEWS</div>
-              <iframe data-src="https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
-            </div>
+          <div class="news-tabs">
+            <button class="news-tab active" data-ntab="all">ALL</button>
+            <button class="news-tab" data-ntab="tweets">X / TWEETS</button>
           </div>
+          <div class="news-feed" id="news-feed"></div>
+          <div class="news-feed tweet-feed" id="tweet-feed" style="display:none;"></div>
         </div>
-        <!-- Alerts tab -->
-        <div class="btab-content" id="btab-alerts">
-          <div class="alerts-content">
-            <div class="stat-row">
-              <span class="stat-label">ACTIVE EVENTS</span>
-              <span class="stat-value" id="events-count">--</span>
+      </div>
+
+      <!-- Bottom section - Alerts only -->
+      <div class="bottom-section" id="bottom-section">
+        <div class="bottom-drag-handle" id="bottom-drag-handle">
+          <span class="drag-indicator"></span>
+        </div>
+        <div class="bottom-content">
+          <div class="btab-content active" id="btab-alerts">
+            <div class="alerts-content">
+              <div class="stat-row">
+                <span class="stat-label">ACTIVE EVENTS</span>
+                <span class="stat-value" id="events-count">--</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">CONFLICTS</span>
+                <span class="stat-value" id="conflicts-count">--</span>
+              </div>
+              <div class="timeline" id="event-timeline"></div>
             </div>
-            <div class="stat-row">
-              <span class="stat-label">CONFLICTS</span>
-              <span class="stat-value" id="conflicts-count">--</span>
-            </div>
-            <div class="timeline" id="event-timeline"></div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Mobile Tab Bar -->
+  <!-- ===== PAGE: THEATER ===== -->
+  <div class="page" id="page-theater">
+    <div class="theater-page">
+      <div class="theater-page-header">
+        <span class="theater-page-title">&#9654; LIVE MONITORS</span>
+        <select id="theater-stream-select" class="stream-select">
+          <option value="">-- ADD STREAM --</option>
+          <option value="aljazeera">Al Jazeera EN</option>
+          <option value="france24">France 24 EN</option>
+          <option value="dw">DW News</option>
+          <option value="sky">Sky News</option>
+        </select>
+      </div>
+      <div class="theater-grid" id="theater-grid">
+        <div class="theater-card">
+          <div class="webcam-label">BEIRUT - LIVE</div>
+          <iframe data-src="https://www.youtube.com/embed/gmtlJ_m2r5A?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+        </div>
+        <div class="theater-card">
+          <div class="webcam-label">JERUSALEM - LIVE</div>
+          <iframe data-src="https://www.youtube.com/embed/ITAlerjV8Ro?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+        </div>
+        <div class="theater-card">
+          <div class="webcam-label">ISRAEL - LIVE</div>
+          <iframe data-src="https://www.youtube.com/embed/SQ1TFGJOyRk?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+        </div>
+        <div class="theater-card">
+          <div class="webcam-label">IRAN / MIDDLE EAST - LIVE</div>
+          <iframe data-src="https://www.youtube.com/embed/TKdyfoEEWYw?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+        </div>
+        <div class="theater-card">
+          <div class="webcam-label">AL JAZEERA ENGLISH</div>
+          <iframe data-src="https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+        </div>
+        <div class="theater-card">
+          <div class="webcam-label">SKY NEWS</div>
+          <iframe data-src="https://www.youtube.com/embed/YDvsBbKfLPA?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+        </div>
+        <div class="theater-card">
+          <div class="webcam-label">DW NEWS</div>
+          <iframe data-src="https://www.youtube.com/embed/LuKwFajn37U?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+        </div>
+        <div class="theater-card">
+          <div class="webcam-label">FOX NEWS</div>
+          <iframe data-src="https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: ODDS ===== -->
+  <div class="page" id="page-odds">
+    <div class="odds-page">
+      <div class="odds-page-header">
+        <span class="odds-page-title">&#128200; PREDICTION MARKETS</span>
+        <span class="poly-source">POLYMARKET</span>
+      </div>
+      <div class="odds-feed" id="polymarket-feed">
+        <div class="poly-empty">Connecting to Polymarket...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: INTEL ===== -->
+  <div class="page" id="page-intel">
+    <div class="intel-page">
+      <div class="intel-col">
+        <div class="intel-col-header">
+          <span class="sigint-title">&#128225; SIGINT INTERCEPT</span>
+        </div>
+        <div class="sigint-feed" id="sigint-feed"></div>
+      </div>
+      <div class="intel-col">
+        <div class="intel-col-header">
+          <span class="oob-title">&#9876; ORDER OF BATTLE</span>
+        </div>
+        <div class="oob-body" id="oob-body">
+          <div class="oob-faction">
+            <div class="oob-faction-name" style="color:#00ff41">IRAN (IRIAF / IRGC)</div>
+            <div class="oob-row"><span class="oob-asset">F-14A Tomcat</span><span class="oob-count">~24</span></div>
+            <div class="oob-row"><span class="oob-asset">Su-24MK Fencer</span><span class="oob-count">~20</span></div>
+            <div class="oob-row"><span class="oob-asset">F-4E Phantom II</span><span class="oob-count">~30</span></div>
+            <div class="oob-row"><span class="oob-asset">MiG-29 Fulcrum</span><span class="oob-count">~25</span></div>
+            <div class="oob-row"><span class="oob-asset">Shahed-136 UAV</span><span class="oob-count">~1000+</span></div>
+            <div class="oob-row"><span class="oob-asset">Shahab-3 MRBM</span><span class="oob-count">~150</span></div>
+            <div class="oob-row"><span class="oob-asset">Emad MRBM</span><span class="oob-count">~50</span></div>
+            <div class="oob-row"><span class="oob-asset">Kilo-class Sub</span><span class="oob-count">3</span></div>
+            <div class="oob-row"><span class="oob-asset">Fast Attack Craft</span><span class="oob-count">~200+</span></div>
+            <div class="oob-row"><span class="oob-asset">S-300PMU2 SAM</span><span class="oob-count">4 bty</span></div>
+            <div class="oob-row"><span class="oob-asset">Bavar-373 SAM</span><span class="oob-count">~3 bty</span></div>
+          </div>
+          <div class="oob-faction">
+            <div class="oob-faction-name" style="color:#3399ff">ISRAEL (IDF / IAF)</div>
+            <div class="oob-row"><span class="oob-asset">F-35I Adir</span><span class="oob-count">~50</span></div>
+            <div class="oob-row"><span class="oob-asset">F-15I Ra'am</span><span class="oob-count">~25</span></div>
+            <div class="oob-row"><span class="oob-asset">F-16I Sufa</span><span class="oob-count">~100</span></div>
+            <div class="oob-row"><span class="oob-asset">Arrow-3 ABM</span><span class="oob-count">2 bty</span></div>
+            <div class="oob-row"><span class="oob-asset">Iron Dome</span><span class="oob-count">10 bty</span></div>
+            <div class="oob-row"><span class="oob-asset">David's Sling</span><span class="oob-count">4 bty</span></div>
+            <div class="oob-row"><span class="oob-asset">Dolphin-class Sub</span><span class="oob-count">5</span></div>
+            <div class="oob-row"><span class="oob-asset">Sa'ar 6 Corvette</span><span class="oob-count">4</span></div>
+            <div class="oob-row"><span class="oob-asset">Jericho III ICBM</span><span class="oob-count">~25</span></div>
+            <div class="oob-row"><span class="oob-asset">Hermes 900 UAV</span><span class="oob-count">~50+</span></div>
+          </div>
+          <div class="oob-faction">
+            <div class="oob-faction-name" style="color:#ffffff">US CENTCOM (5TH FLEET / AFCENT)</div>
+            <div class="oob-row"><span class="oob-asset">CSG (Carrier)</span><span class="oob-count">1-2</span></div>
+            <div class="oob-row"><span class="oob-asset">F-22 Raptor</span><span class="oob-count">~12</span></div>
+            <div class="oob-row"><span class="oob-asset">F-35A</span><span class="oob-count">~24</span></div>
+            <div class="oob-row"><span class="oob-asset">B-52H Stratofortress</span><span class="oob-count">~6</span></div>
+            <div class="oob-row"><span class="oob-asset">MQ-9 Reaper</span><span class="oob-count">~20</span></div>
+            <div class="oob-row"><span class="oob-asset">RQ-4 Global Hawk</span><span class="oob-count">~4</span></div>
+            <div class="oob-row"><span class="oob-asset">THAAD Battery</span><span class="oob-count">1-2</span></div>
+            <div class="oob-row"><span class="oob-asset">Patriot PAC-3</span><span class="oob-count">~4 bty</span></div>
+            <div class="oob-row"><span class="oob-asset">DDG (Destroyer)</span><span class="oob-count">~6</span></div>
+            <div class="oob-row"><span class="oob-asset">SSN (Sub)</span><span class="oob-count">1-2</span></div>
+          </div>
+          <div class="oob-faction">
+            <div class="oob-faction-name" style="color:#ef4444">PROXY FORCES</div>
+            <div class="oob-row"><span class="oob-asset">Hezbollah Fighters</span><span class="oob-count">~30,000</span></div>
+            <div class="oob-row"><span class="oob-asset">Houthi ASBM/UAV</span><span class="oob-count">~500+</span></div>
+            <div class="oob-row"><span class="oob-asset">Iraqi PMF Militia</span><span class="oob-count">~100,000</span></div>
+            <div class="oob-row"><span class="oob-asset">Hamas Fighters</span><span class="oob-count">~10,000</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Tab Bar (replaced by page nav on desktop) -->
   <div class="mobile-tab-bar">
-    <button class="mobile-tab" data-panel="none" id="tab-map">
+    <button class="mobile-tab active" data-page="map">
       <span class="tab-icon">&#9650;</span>MAP
     </button>
-    <button class="mobile-tab" data-panel="news-panel" id="tab-news">
-      <span class="tab-icon">&#9654;</span>NEWS
+    <button class="mobile-tab" data-page="theater">
+      <span class="tab-icon">&#9654;</span>THEATER
     </button>
-    <button class="mobile-tab" data-panel="bottom-section" id="tab-live">
-      <span class="tab-icon">&#9655;</span>LIVE
+    <button class="mobile-tab" data-page="odds">
+      <span class="tab-icon">&#128200;</span>ODDS
     </button>
-    <button class="mobile-tab" data-panel="alerts-mobile" id="tab-events">
-      <span class="tab-icon">&#9888;</span>ALERTS
+    <button class="mobile-tab" data-page="intel">
+      <span class="tab-icon">&#128225;</span>INTEL
     </button>
   </div>
 
-  <!-- Live Stream Panel -->
-  <div id="stream-panel" class="stream-panel">
-    <div id="stream-header" class="stream-header">
-      <span class="stream-title">&#9654; LIVE MONITOR</span>
-      <select id="stream-select" class="stream-select">
-        <option value="aljazeera">Al Jazeera EN</option>
-        <option value="france24">France 24 EN</option>
-        <option value="dw">DW News</option>
-        <option value="sky">Sky News</option>
-      </select>
-      <button id="stream-close" class="stream-close">&times;</button>
+  <!-- SITREP Modal -->
+  <div class="sitrep-modal" id="sitrep-modal">
+    <div class="sitrep-content">
+      <div class="sitrep-header">
+        <span class="sitrep-classification">UNCLASSIFIED // FOUO</span>
+        <button class="sitrep-close" id="sitrep-close">&times;</button>
+      </div>
+      <div class="sitrep-body" id="sitrep-body"></div>
+      <div class="sitrep-footer">
+        <button class="sitrep-copy" id="sitrep-copy">COPY TO CLIPBOARD</button>
+      </div>
     </div>
-    <iframe id="stream-frame" class="stream-frame" allow="autoplay; encrypted-media" allowfullscreen></iframe>
   </div>
 
-  <!-- Stream Toggle Button -->
-  <button id="stream-toggle" class="stream-toggle-btn">&#9654; LIVE TV</button>
+  <!-- Command Console Overlay -->
+  <div class="console-overlay" id="console-overlay">
+    <div class="console-output" id="console-output"></div>
+    <div class="console-input-row">
+      <span class="console-prompt">&gt;</span>
+      <input type="text" class="console-input" id="console-input" spellcheck="false" autocomplete="off" placeholder="Type a command...">
+    </div>
+  </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/map.js"></script>
   <script src="js/news.js"></script>
   <script src="js/sidebar.js"></script>
+  <script src="js/console.js"></script>
   <script src="js/app.js"></script>
   <script>
-    // Mobile tab bar panel toggling
     (function() {
-      const tabs = document.querySelectorAll('.mobile-tab');
-      const panelClasses = ['news-panel','bottom-section'];
+      // === PAGE SWITCHING ===
+      function switchPage(pageName) {
+        // Deactivate all pages and tabs
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
 
-      tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-          const target = tab.dataset.panel;
+        // Activate target page
+        const page = document.getElementById('page-' + pageName);
+        if (page) page.classList.add('active');
 
-          // Close all panels
-          panelClasses.forEach(cls => {
-            const el = document.querySelector('.' + cls);
-            if (el) el.classList.remove('mobile-open');
+        // Activate matching tabs
+        document.querySelectorAll(`.page-tab[data-page="${pageName}"]`).forEach(t => t.classList.add('active'));
+        document.querySelectorAll(`.mobile-tab[data-page="${pageName}"]`).forEach(t => t.classList.add('active'));
+
+        // Lazy-load iframes when theater page opens
+        if (pageName === 'theater') {
+          page.querySelectorAll('iframe[data-src]').forEach(f => {
+            if (!f.src || f.src === '' || f.src === 'about:blank') {
+              f.src = f.dataset.src;
+            }
           });
+        }
 
-          // Deactivate all tabs
-          tabs.forEach(t => t.classList.remove('active'));
-
-          if (target === 'none') {
-            tab.classList.add('active');
-            return;
+        // Unload iframes when leaving theater page
+        if (pageName !== 'theater') {
+          const theaterPage = document.getElementById('page-theater');
+          if (theaterPage) {
+            theaterPage.querySelectorAll('iframe[src]').forEach(f => {
+              if (f.src && f.src !== '' && f.src !== 'about:blank') {
+                f.dataset.src = f.dataset.src || f.src;
+                f.src = '';
+              }
+            });
           }
+        }
 
-          // Handle alerts-mobile: open bottom section on alerts tab
-          if (target === 'alerts-mobile') {
-            const bs = document.querySelector('.bottom-section');
-            if (bs) {
-              bs.classList.add('mobile-open');
-              // Switch to alerts tab
-              document.querySelectorAll('.btab').forEach(b => b.classList.remove('active'));
-              document.querySelectorAll('.btab-content').forEach(c => c.classList.remove('active'));
-              document.querySelector('[data-btab="alerts"]')?.classList.add('active');
-              document.getElementById('btab-alerts')?.classList.add('active');
-            }
-            tab.classList.add('active');
-            return;
-          }
+        // Invalidate map size when switching to map page
+        if (pageName === 'map' && window.MapModule && MapModule.invalidateSize) {
+          setTimeout(() => MapModule.invalidateSize(), 100);
+        }
+      }
 
-          const panel = document.querySelector('.' + target);
-          if (panel) {
-            if (panel.classList.contains('mobile-open')) {
-              panel.classList.remove('mobile-open');
-            } else {
-              panel.classList.add('mobile-open');
-              tab.classList.add('active');
-            }
-          }
-        });
+      // Desktop page tabs
+      document.querySelectorAll('.page-tab').forEach(tab => {
+        tab.addEventListener('click', () => switchPage(tab.dataset.page));
       });
 
-      // Default: map tab active
-      document.getElementById('tab-map')?.classList.add('active');
+      // Mobile page tabs
+      document.querySelectorAll('.mobile-tab').forEach(tab => {
+        tab.addEventListener('click', () => switchPage(tab.dataset.page));
+      });
 
       // News panel tabs (ALL / TWEETS)
       document.querySelectorAll('.news-tab').forEach(btn => {
@@ -286,7 +390,7 @@
         });
       });
 
-      // News panel left-edge drag to resize wider
+      // News panel left-edge drag to resize
       const newsDrag = document.getElementById('news-drag-handle');
       const newsPanel = document.getElementById('news-panel');
       if (newsDrag && newsPanel) {
@@ -322,34 +426,6 @@
         document.addEventListener('touchend', nEnd);
       }
 
-      // Bottom tab switching + lazy load iframes
-      document.querySelectorAll('.btab').forEach(btn => {
-        btn.addEventListener('click', () => {
-          // Unload iframes from previous tab to save memory
-          const prevTab = document.querySelector('.btab-content.active');
-          if (prevTab) {
-            prevTab.querySelectorAll('iframe[src]').forEach(f => {
-              f.dataset.src = f.src;
-              f.src = '';
-            });
-          }
-          document.querySelectorAll('.btab').forEach(b => b.classList.remove('active'));
-          document.querySelectorAll('.btab-content').forEach(c => c.classList.remove('active'));
-          btn.classList.add('active');
-          const tab = btn.dataset.btab;
-          const panel = document.getElementById('btab-' + tab);
-          if (panel) {
-            panel.classList.add('active');
-            // Lazy load iframes in this tab
-            panel.querySelectorAll('iframe[data-src]').forEach(f => {
-              if (!f.src || f.src === '' || f.src === 'about:blank') {
-                f.src = f.dataset.src;
-              }
-            });
-          }
-        });
-      });
-
       // Drag handle to resize bottom section
       const dragHandle = document.getElementById('bottom-drag-handle');
       const bottomSection = document.getElementById('bottom-section');
@@ -369,9 +445,8 @@
         function doDrag(clientY) {
           if (!isDragging) return;
           const delta = startY - clientY;
-          const newHeight = Math.max(60, Math.min(window.innerHeight * 0.7, startHeight + delta));
+          const newHeight = Math.max(36, Math.min(window.innerHeight * 0.7, startHeight + delta));
           bottomSection.style.height = newHeight + 'px';
-          // Update grid
           const grid = document.querySelector('.dashboard-grid');
           if (grid) grid.style.gridTemplateRows = `1fr ${newHeight}px`;
         }
@@ -404,6 +479,16 @@
           }
         });
       }
+
+      // Keyboard shortcut for page switching: 1-4
+      document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+        const pages = ['map', 'theater', 'odds', 'intel'];
+        const num = parseInt(e.key);
+        if (num >= 1 && num <= 4) {
+          switchPage(pages[num - 1]);
+        }
+      });
     })();
   </script>
 </body>

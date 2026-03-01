@@ -4,17 +4,6 @@ const parser = new RSSParser();
 
 const ACCOUNTS = [
   'BRICSinfo',
-  'sentaborsen',
-  'IntelDoge',
-  'IsraelRadar_com',
-  'ELINTNews',
-  'OSINTdefender',
-  'Faytuks',
-  'MiddleEastEye',
-  'TheInsiderPaper',
-  'BNONews',
-  'Conflicts',
-  'Liveuamap',
 ];
 
 const USER_AGENTS = [
@@ -101,8 +90,7 @@ module.exports = async function scrapeTwitter() {
   console.log('[twitter] syndication failed, trying Google News fallback');
   try {
     const queries = [
-      'https://news.google.com/rss/search?q=%22BRICSinfo%22+OR+%22IntelDoge%22+OR+%22IsraelRadar%22+iran+OR+israel&hl=en-US&gl=US&ceid=US:en',
-      'https://news.google.com/rss/search?q=iran+strike+OR+attack+OR+bomb+breaking&hl=en-US&gl=US&ceid=US:en',
+      'https://news.google.com/rss/search?q=%22BRICSinfo%22+iran+OR+israel+OR+BRICS&hl=en-US&gl=US&ceid=US:en',
     ];
     for (const gUrl of queries) {
       try {

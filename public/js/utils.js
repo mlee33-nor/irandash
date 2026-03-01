@@ -24,6 +24,7 @@ function timeAgo(isoString) {
   const then = new Date(isoString).getTime();
   const diff = Math.floor((now - then) / 1000);
 
+  if (diff < 0) return 'just now';
   if (diff < 60) return `${diff}s ago`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
@@ -41,16 +42,24 @@ function truncate(str, len) {
   return str.length > len ? str.slice(0, len) + '...' : str;
 }
 
-// Update clock
+// Update theater clocks
 function startClock() {
-  const el = document.getElementById('clock');
+  const zones = [
+    { id: 'tc-utc', tz: 'UTC', showSec: true },
+    { id: 'tc-dc', tz: 'America/New_York', showSec: false },
+    { id: 'tc-tlv', tz: 'Asia/Jerusalem', showSec: false },
+    { id: 'tc-thr', tz: 'Asia/Tehran', showSec: false },
+  ];
+
   function update() {
     const now = new Date();
-    const utc = now.toLocaleTimeString('en-US', {
-      hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit',
-      timeZone: 'UTC'
+    zones.forEach(z => {
+      const el = document.getElementById(z.id);
+      if (!el) return;
+      const opts = { hour12: false, hour: '2-digit', minute: '2-digit', timeZone: z.tz };
+      if (z.showSec) opts.second = '2-digit';
+      el.textContent = now.toLocaleTimeString('en-US', opts);
     });
-    el.textContent = utc + ' UTC';
   }
   update();
   setInterval(update, 1000);
