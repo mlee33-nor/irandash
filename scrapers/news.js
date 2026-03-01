@@ -85,9 +85,13 @@ module.exports = async function scrapeNews() {
   const articles = [];
 
   const results = await Promise.allSettled(
-    FEEDS.map(feed =>
-      parser.parseURL(feed.url).then(parsed => ({ ...feed, items: parsed.items || [] }))
-    )
+    FEEDS.map(feed => {
+      // Wrap each feed in a timeout so one slow feed doesn't block all
+      return Promise.race([
+        parser.parseURL(feed.url).then(parsed => ({ ...feed, items: parsed.items || [] })),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Feed timeout')), 8000))
+      ]);
+    })
   );
 
   for (const result of results) {
