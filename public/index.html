@@ -62,6 +62,7 @@
     <button class="page-tab" data-page="theater">&#9654; THEATER</button>
     <button class="page-tab" data-page="odds">&#128200; ODDS</button>
     <button class="page-tab" data-page="intel">&#9876; INTEL</button>
+    <button class="page-tab" data-page="sim">&#9876; SIM</button>
   </nav>
 
   <!-- ===== PAGE: MAP ===== -->
@@ -279,6 +280,77 @@
     </div>
   </div>
 
+  <!-- ===== PAGE: SIM ===== -->
+  <div class="page" id="page-sim">
+    <div class="sim-page">
+      <!-- Scenario selector -->
+      <div class="scenario-selector">
+        <div class="scenario-cards">
+          <div class="scenario-card" data-scenario="iran-strikes-israel" onclick="SimModule.selectScenario('iran-strikes-israel')">
+            <div class="scenario-icon">&#127470;&#127479;&#8594;&#127470;&#127473;</div>
+            <div class="scenario-name">Iran Strikes Israel</div>
+            <div class="scenario-desc">Ballistic missiles at Israeli bases. Israel retaliates on nuclear sites.</div>
+          </div>
+          <div class="scenario-card" data-scenario="israel-strikes-iran-nukes" onclick="SimModule.selectScenario('israel-strikes-iran-nukes')">
+            <div class="scenario-icon">&#127470;&#127473;&#8594;&#9762;&#65039;</div>
+            <div class="scenario-name">Israel Strikes Nuclear Sites</div>
+            <div class="scenario-desc">Preemptive strike on Natanz, Fordow, Isfahan. Iran retaliates.</div>
+          </div>
+          <div class="scenario-card" data-scenario="full-regional-war" onclick="SimModule.selectScenario('full-regional-war')">
+            <div class="scenario-icon">&#128293;&#127758;</div>
+            <div class="scenario-name">Full Regional War</div>
+            <div class="scenario-desc">Multi-front: Iran, Hezbollah, Houthis, PMF. US carrier strikes.</div>
+          </div>
+          <div class="scenario-card" data-scenario="hormuz-closure" onclick="SimModule.selectScenario('hormuz-closure')">
+            <div class="scenario-icon">&#9875;&#128674;</div>
+            <div class="scenario-name">Strait of Hormuz Closure</div>
+            <div class="scenario-desc">Iran mines the strait. Naval confrontation. Oil crisis.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sim content (hidden until scenario selected) -->
+      <div class="sim-content" id="sim-content" style="display:none">
+        <div class="sim-map-wrap">
+          <div id="sim-map" class="sim-map"></div>
+        </div>
+        <div class="sim-panel">
+          <div class="sim-panel-section">
+            <div class="sim-panel-header">PHASES</div>
+            <div class="sim-phase-list" id="sim-phase-list"></div>
+          </div>
+          <div class="sim-panel-section">
+            <div class="sim-panel-header">SITUATION</div>
+            <div class="sim-phase-desc" id="sim-phase-desc"></div>
+          </div>
+          <div class="sim-panel-section">
+            <div class="sim-panel-header">BATTLE STATS</div>
+            <div class="sim-stats" id="sim-stats"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline controls -->
+      <div class="sim-timeline">
+        <button class="sim-ctrl-btn" onclick="SimModule.stepBack()" title="Previous phase">&#9664;</button>
+        <button class="sim-ctrl-btn sim-play" id="sim-play-btn" onclick="SimModule.togglePlay()" title="Play/Pause">&#9654;</button>
+        <button class="sim-ctrl-btn" onclick="SimModule.stepForward()" title="Next phase">&#9654;</button>
+        <div class="sim-progress">
+          <div class="sim-progress-track">
+            <div class="sim-progress-bar" id="sim-progress-bar"></div>
+          </div>
+          <span class="sim-phase-label" id="sim-phase-label">Phase 0/0</span>
+        </div>
+        <div class="sim-speed-controls">
+          <span class="sim-speed-label">SPEED</span>
+          <button class="sim-speed-btn active" data-speed="1" onclick="SimModule.setSpeed(1)">1x</button>
+          <button class="sim-speed-btn" data-speed="2" onclick="SimModule.setSpeed(2)">2x</button>
+          <button class="sim-speed-btn" data-speed="4" onclick="SimModule.setSpeed(4)">4x</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Mobile Tab Bar (replaced by page nav on desktop) -->
   <div class="mobile-tab-bar">
     <button class="mobile-tab active" data-page="map">
@@ -292,6 +364,9 @@
     </button>
     <button class="mobile-tab" data-page="intel">
       <span class="tab-icon">&#128225;</span>INTEL
+    </button>
+    <button class="mobile-tab" data-page="sim">
+      <span class="tab-icon">&#9876;</span>SIM
     </button>
   </div>
 
@@ -325,6 +400,7 @@
   <script src="js/news.js"></script>
   <script src="js/sidebar.js"></script>
   <script src="js/console.js"></script>
+  <script src="js/sim.js"></script>
   <script src="js/app.js"></script>
   <script>
     (function() {
@@ -368,6 +444,11 @@
         // Invalidate map size when switching to map page
         if (pageName === 'map' && window.MapModule && MapModule.invalidateSize) {
           setTimeout(() => MapModule.invalidateSize(), 100);
+        }
+
+        // Invalidate sim map size when switching to sim page
+        if (pageName === 'sim' && window.SimModule && SimModule.invalidateSize) {
+          setTimeout(() => SimModule.invalidateSize(), 100);
         }
       }
 
@@ -522,9 +603,9 @@
       // Keyboard shortcut for page switching: 1-4
       document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-        const pages = ['map', 'theater', 'odds', 'intel'];
+        const pages = ['map', 'theater', 'odds', 'intel', 'sim'];
         const num = parseInt(e.key);
-        if (num >= 1 && num <= 4) {
+        if (num >= 1 && num <= 5) {
           switchPage(pages[num - 1]);
         }
       });
