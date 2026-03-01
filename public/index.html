@@ -46,13 +46,21 @@
       <div id="map"></div>
     </div>
 
-    <!-- News feed panel -->
-    <div class="panel news-panel">
-      <div class="panel-header">
-        <span class="panel-title">&#9654; LIVE INTELLIGENCE FEED</span>
-        <span class="item-count" id="news-count">0</span>
+    <!-- News feed panel - resizable -->
+    <div class="panel news-panel" id="news-panel">
+      <div class="news-drag-handle" id="news-drag-handle"></div>
+      <div class="news-panel-inner">
+        <div class="panel-header">
+          <span class="panel-title">&#9654; LIVE INTELLIGENCE FEED</span>
+          <span class="item-count" id="news-count">0</span>
+        </div>
+        <div class="news-tabs">
+          <button class="news-tab active" data-ntab="all">ALL</button>
+          <button class="news-tab" data-ntab="tweets">X / TWEETS</button>
+        </div>
+        <div class="news-feed" id="news-feed"></div>
+        <div class="news-feed tweet-feed" id="tweet-feed" style="display:none;"></div>
       </div>
-      <div class="news-feed" id="news-feed"></div>
     </div>
 
     <!-- Bottom panels - resizable -->
@@ -219,6 +227,60 @@
 
       // Default: map tab active
       document.getElementById('tab-map')?.classList.add('active');
+
+      // News panel tabs (ALL / TWEETS)
+      document.querySelectorAll('.news-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.news-tab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const tab = btn.dataset.ntab;
+          const allFeed = document.getElementById('news-feed');
+          const tweetFeed = document.getElementById('tweet-feed');
+          if (tab === 'tweets') {
+            allFeed.style.display = 'none';
+            tweetFeed.style.display = 'block';
+          } else {
+            allFeed.style.display = 'block';
+            tweetFeed.style.display = 'none';
+          }
+        });
+      });
+
+      // News panel left-edge drag to resize wider
+      const newsDrag = document.getElementById('news-drag-handle');
+      const newsPanel = document.getElementById('news-panel');
+      if (newsDrag && newsPanel) {
+        let dragging = false;
+        let startX = 0;
+        let startW = 0;
+
+        function nStart(clientX) {
+          dragging = true;
+          startX = clientX;
+          startW = newsPanel.offsetWidth;
+          document.body.style.cursor = 'ew-resize';
+          document.body.style.userSelect = 'none';
+        }
+        function nMove(clientX) {
+          if (!dragging) return;
+          const delta = startX - clientX;
+          const newW = Math.max(240, Math.min(window.innerWidth * 0.6, startW + delta));
+          const grid = document.querySelector('.dashboard-grid');
+          if (grid) grid.style.gridTemplateColumns = `1fr 1fr ${newW}px`;
+        }
+        function nEnd() {
+          dragging = false;
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+        }
+
+        newsDrag.addEventListener('mousedown', e => { e.preventDefault(); nStart(e.clientX); });
+        document.addEventListener('mousemove', e => nMove(e.clientX));
+        document.addEventListener('mouseup', nEnd);
+        newsDrag.addEventListener('touchstart', e => nStart(e.touches[0].clientX));
+        document.addEventListener('touchmove', e => { if (dragging) { e.preventDefault(); nMove(e.touches[0].clientX); } }, { passive: false });
+        document.addEventListener('touchend', nEnd);
+      }
 
       // Bottom tab switching
       document.querySelectorAll('.btab').forEach(btn => {
