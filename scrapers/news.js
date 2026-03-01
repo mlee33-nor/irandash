@@ -109,10 +109,10 @@ module.exports = async function scrapeNews() {
     const { source, items } = result.value;
 
     for (const item of items.slice(0, 20)) {
-      // Skip articles older than 12 hours
+      // Skip articles older than 48 hours
       if (item.isoDate) {
         const age = Date.now() - new Date(item.isoDate).getTime();
-        if (age > 12 * 60 * 60 * 1000) continue;
+        if (age > 48 * 60 * 60 * 1000) continue;
       }
 
       const text = `${item.title || ''} ${item.contentSnippet || item.content || ''}`.toLowerCase();
@@ -135,5 +135,5 @@ module.exports = async function scrapeNews() {
 
   // Sort by date, newest first
   articles.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  return articles.slice(0, 50);
+  return articles.slice(0, 80);
 };
