@@ -57,6 +57,7 @@ const MapModule = (function () {
     { name: 'BUSHEHR NUCLEAR PLANT', lat: 28.83, lng: 50.89, country: 'Iran', type: 'nuclear', desc: 'Iran only operating nuclear power plant. Russian-built VVER-1000 reactor. IAEA monitored.' },
     { name: 'ISFAHAN UCF', lat: 32.60, lng: 51.72, country: 'Iran', type: 'nuclear', desc: 'Uranium Conversion Facility. Converts yellowcake to UF6 gas for enrichment. Key fuel cycle node.' },
     { name: 'ARAK IR-40 REACTOR', lat: 34.05, lng: 49.25, country: 'Iran', type: 'nuclear', desc: 'Heavy water research reactor. Redesigned under JCPOA. Plutonium pathway concern.' },
+    { name: 'MOSSAD HQ', lat: 32.15, lng: 34.83, country: 'Israel', type: 'military', desc: 'Institute for Intelligence and Special Operations. Glilot Junction, north Tel Aviv. Foreign intelligence, covert ops, assassinations program.' },
     { name: 'IDF NORTHERN COMMAND', lat: 32.79, lng: 35.53, country: 'Israel', type: 'military', desc: 'IDF Northern Command HQ. Lebanon/Syria front. Galilee Div, 36th Div ops.' },
     { name: 'IDF SOUTHERN COMMAND', lat: 31.25, lng: 34.79, country: 'Israel', type: 'military', desc: 'IDF Southern Command. Gaza operations. 162nd Div, 252nd Div. Rafah crossing ops.' },
     { name: 'KING ABDULAZIZ AB', lat: 26.27, lng: 50.15, country: 'Saudi Arabia', type: 'military', desc: 'RSAF F-15SA Eagles. Eastern Province air defense. Gulf coalition ops.' },
