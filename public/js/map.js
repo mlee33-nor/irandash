@@ -113,7 +113,6 @@ const MapModule = (function () {
         color = '#ffaa00'; symbol = '\uD83D\uDEEC'; // landing strip 🛬
       } else if (base.type === 'nuclear') {
         color = '#a855f7'; symbol = '\u2622\uFE0F'; // radioactive ☢️
-        extraStyle = 'animation:nuclearGlow 2s infinite;';
       } else {
         color = '#ef4444'; symbol = '\uD83E\uDE96'; // military helmet 🪖
       }

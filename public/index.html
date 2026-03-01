@@ -74,45 +74,45 @@
         <button class="btab" data-btab="alerts">ALERTS &amp; EVENTS</button>
       </div>
       <div class="bottom-content">
-        <!-- Webcams tab -->
+        <!-- Webcams tab - lazy loaded -->
         <div class="btab-content active" id="btab-webcams">
           <div class="webcam-grid">
             <div class="webcam-card">
               <div class="webcam-label">BEIRUT - LIVE</div>
-              <iframe src="https://www.youtube.com/embed/gmtlJ_m2r5A?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+              <iframe data-src="https://www.youtube.com/embed/gmtlJ_m2r5A?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
             </div>
             <div class="webcam-card">
               <div class="webcam-label">JERUSALEM - LIVE</div>
-              <iframe src="https://www.youtube.com/embed/ITAlerjV8Ro?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+              <iframe data-src="https://www.youtube.com/embed/ITAlerjV8Ro?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
             </div>
             <div class="webcam-card">
               <div class="webcam-label">ISRAEL - LIVE</div>
-              <iframe src="https://www.youtube.com/embed/SQ1TFGJOyRk?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+              <iframe data-src="https://www.youtube.com/embed/SQ1TFGJOyRk?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
             </div>
             <div class="webcam-card">
               <div class="webcam-label">IRAN / MIDDLE EAST - LIVE</div>
-              <iframe src="https://www.youtube.com/embed/TKdyfoEEWYw?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+              <iframe data-src="https://www.youtube.com/embed/TKdyfoEEWYw?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
             </div>
           </div>
         </div>
-        <!-- News Channels tab -->
+        <!-- News Channels tab - lazy loaded -->
         <div class="btab-content" id="btab-channels">
           <div class="webcam-grid">
             <div class="webcam-card">
               <div class="webcam-label">AL JAZEERA ENGLISH</div>
-              <iframe src="https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+              <iframe data-src="https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
             </div>
             <div class="webcam-card">
               <div class="webcam-label">SKY NEWS</div>
-              <iframe src="https://www.youtube.com/embed/YDvsBbKfLPA?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+              <iframe data-src="https://www.youtube.com/embed/YDvsBbKfLPA?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
             </div>
             <div class="webcam-card">
               <div class="webcam-label">DW NEWS</div>
-              <iframe src="https://www.youtube.com/embed/LuKwFajn37U?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+              <iframe data-src="https://www.youtube.com/embed/LuKwFajn37U?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
             </div>
             <div class="webcam-card">
               <div class="webcam-label">FOX NEWS</div>
-              <iframe src="https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+              <iframe data-src="https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
             </div>
           </div>
         </div>
@@ -282,14 +282,31 @@
         document.addEventListener('touchend', nEnd);
       }
 
-      // Bottom tab switching
+      // Bottom tab switching + lazy load iframes
       document.querySelectorAll('.btab').forEach(btn => {
         btn.addEventListener('click', () => {
+          // Unload iframes from previous tab to save memory
+          const prevTab = document.querySelector('.btab-content.active');
+          if (prevTab) {
+            prevTab.querySelectorAll('iframe[src]').forEach(f => {
+              f.dataset.src = f.src;
+              f.src = '';
+            });
+          }
           document.querySelectorAll('.btab').forEach(b => b.classList.remove('active'));
           document.querySelectorAll('.btab-content').forEach(c => c.classList.remove('active'));
           btn.classList.add('active');
           const tab = btn.dataset.btab;
-          document.getElementById('btab-' + tab)?.classList.add('active');
+          const panel = document.getElementById('btab-' + tab);
+          if (panel) {
+            panel.classList.add('active');
+            // Lazy load iframes in this tab
+            panel.querySelectorAll('iframe[data-src]').forEach(f => {
+              if (!f.src || f.src === '' || f.src === 'about:blank') {
+                f.src = f.dataset.src;
+              }
+            });
+          }
         });
       });
 
