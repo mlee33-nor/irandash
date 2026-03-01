@@ -68,9 +68,9 @@ module.exports = async function scrapeTwitter() {
         // Determine severity from content
         const lower = text.toLowerCase();
         let severity = 'low';
-        if (/breaking|killed|dead|died|attack|strike|bomb|war|invasion|nuclear/i.test(lower)) severity = 'critical';
-        else if (/military|missile|drone|sanction|threat|weapon|urgent/i.test(lower)) severity = 'high';
-        else if (/tension|deploy|warning|protest|clash|just in/i.test(lower)) severity = 'medium';
+        if (/breaking|killed|dead\b|death|died|attack|strike|bomb|war|invasion|nuclear|assassinat|supreme leader|khamenei|casualt|airstrike|explosion/i.test(lower)) severity = 'critical';
+        else if (/military|missile|drone|sanction|threat|weapon|urgent|retaliat|offensive|mobiliz|intercept/i.test(lower)) severity = 'high';
+        else if (/tension|deploy|warning|protest|clash|just in|confirm|report|update/i.test(lower)) severity = 'medium';
 
         tweets.push({
           id: `x-${account}-${tweetId || i}`,

@@ -85,9 +85,9 @@ function findLocation(text) {
 
 function getSeverity(text) {
   const lower = text.toLowerCase();
-  if (/strike|attack|bomb|explosion|killed|casualties|war\b|invasion/.test(lower)) return 'critical';
-  if (/missile|drone|military|nuclear|weapon|sanction|threat/.test(lower)) return 'high';
-  if (/tension|deploy|warning|protest|clash/.test(lower)) return 'medium';
+  if (/strike|attack|bomb|explosion|killed|casualties|war\b|invasion|dead\b|death|died|assassinat|supreme leader|khamenei.*dead|regime.*fall/.test(lower)) return 'critical';
+  if (/missile|drone|military|nuclear|weapon|sanction|threat|airstrike|retaliat|offensive|mobiliz/.test(lower)) return 'high';
+  if (/tension|deploy|warning|protest|clash|breaking|urgent|confirm/.test(lower)) return 'medium';
   return 'low';
 }
 
