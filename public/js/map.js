@@ -173,60 +173,80 @@ const MapModule = (function () {
     NAVAL_BASES.forEach(base => {
       let color, symbol, extraStyle = '';
       const countryLower = (base.country || '').toLowerCase();
-      const descLower = (base.desc || '').toLowerCase();
-      const nameLower = (base.name || '').toLowerCase();
-      // Detect US bases by description/name (hosted in other countries)
+      // Detect US bases by description (hosted in other countries)
       const isUSBase = /\bus[\s\/]|usaf|centcom|us army|us forces|us sof|us personnel|coalition|5th fleet/i.test(base.desc) || /\bus\b/i.test(base.name);
+      const isRussianBase = /russian|russia|vks/i.test(base.desc);
 
-      // Nuclear overrides everything
+      // Country color mapping
+      const countryColors = {
+        'iran': '#00ff41',
+        'israel': '#3399ff',
+        'turkey': '#ef4444',
+        'saudi arabia': '#10b981',
+        'syria': '#ef4444',
+        'iraq': '#ef4444',
+        'yemen': '#ef4444',
+        'qatar': '#8b1a1a',
+        'uae': '#ef4444',
+        'bahrain': '#ef4444',
+        'kuwait': '#10b981',
+      };
+
+      // Country flag images (SVG from flagcdn for cross-platform support)
+      const countryFlags = {
+        'iran': 'https://flagcdn.com/w40/ir.png',
+        'israel': 'https://flagcdn.com/w40/il.png',
+        'us': 'https://flagcdn.com/w40/us.png',
+        'russia': 'https://flagcdn.com/w40/ru.png',
+        'turkey': 'https://flagcdn.com/w40/tr.png',
+        'saudi arabia': 'https://flagcdn.com/w40/sa.png',
+        'syria': 'https://flagcdn.com/w40/sy.png',
+        'iraq': 'https://flagcdn.com/w40/iq.png',
+        'yemen': 'https://flagcdn.com/w40/ye.png',
+        'qatar': 'https://flagcdn.com/w40/qa.png',
+        'uae': 'https://flagcdn.com/w40/ae.png',
+        'bahrain': 'https://flagcdn.com/w40/bh.png',
+        'kuwait': 'https://flagcdn.com/w40/kw.png',
+      };
+
+      // Determine which country flag to use
+      let flagCountry = countryLower;
+      if (isUSBase) flagCountry = 'us';
+      else if (isRussianBase) flagCountry = 'russia';
+      color = isUSBase ? '#ffffff' : isRussianBase ? '#ef4444' : (countryColors[countryLower] || '#ef4444');
+
+      // Type-specific icons for naval, airbase, nuclear, hq
+      // Country flags only for military/generic type
       if (base.type === 'nuclear') {
         symbol = '\u2622\uFE0F'; // ☢️
         color = '#a855f7';
-      } else if (countryLower === 'iran') {
-        symbol = '\uD83C\uDDEE\uD83C\uDDF7'; // 🇮🇷
-        color = '#00ff41';
-      } else if (countryLower === 'israel') {
-        symbol = '\uD83C\uDDEE\uD83C\uDDF1'; // 🇮🇱
-        color = '#3399ff';
-      } else if (isUSBase) {
-        symbol = '\uD83C\uDDFA\uD83C\uDDF8'; // 🇺🇸
-        color = '#ffffff';
-      } else if (countryLower === 'turkey') {
-        symbol = '\uD83C\uDDF9\uD83C\uDDF7'; // 🇹🇷
-        color = '#ef4444';
-      } else if (countryLower === 'saudi arabia') {
-        symbol = '\uD83C\uDDF8\uD83C\uDDE6'; // 🇸🇦
-        color = '#10b981';
-      } else if (countryLower === 'syria') {
-        // Check if Russian base
-        if (/russian|russia|vks/i.test(base.desc)) {
-          symbol = '\uD83C\uDDF7\uD83C\uDDFA'; // 🇷🇺
-          color = '#ef4444';
-        } else {
-          symbol = '\uD83C\uDDF8\uD83C\uDDFE'; // 🇸🇾
-          color = '#ef4444';
-        }
-      } else if (countryLower === 'iraq') {
-        symbol = '\uD83C\uDDEE\uD83C\uDDF6'; // 🇮🇶
-        color = '#ef4444';
-      } else if (countryLower === 'yemen') {
-        symbol = '\uD83C\uDDFE\uD83C\uDDEA'; // 🇾🇪
-        color = '#ef4444';
+      } else if (base.type === 'naval') {
+        symbol = '\u2693'; // ⚓
+      } else if (base.type === 'airbase') {
+        symbol = '\uD83D\uDEEC'; // 🛬
+      } else if (base.type === 'hq') {
+        symbol = '\uD83C\uDF96\uFE0F'; // 🎖️
       } else {
-        // Qatar, UAE, Bahrain, Kuwait - show host country flag
-        const flagMap = {
-          'qatar': '\uD83C\uDDF6\uD83C\uDDE6',
-          'uae': '\uD83C\uDDE6\uD83C\uDDEA',
-          'bahrain': '\uD83C\uDDE7\uD83C\uDDED',
-          'kuwait': '\uD83C\uDDF0\uD83C\uDDFC',
-        };
-        symbol = flagMap[countryLower] || '\uD83E\uDE96';
-        color = '#ef4444';
+        // Military/generic bases get country flag image
+        symbol = null; // will use flag image instead
       }
 
+      let iconHtml;
+      if (symbol) {
+        // Emoji icon for naval, airbase, nuclear, hq
+        iconHtml = `<div class="base-marker" style="color:${color};text-shadow:0 0 10px ${color};font-size:17px;${extraStyle}">${symbol}</div>`;
+      } else {
+        // Flag image for military bases
+        const flagUrl = countryFlags[flagCountry] || countryFlags[countryLower];
+        if (flagUrl) {
+          iconHtml = `<div class="base-marker" style="display:flex;align-items:center;justify-content:center;"><img src="${flagUrl}" style="width:22px;height:14px;border:1px solid rgba(255,255,255,0.3);border-radius:2px;box-shadow:0 0 6px ${color};" alt="${base.country}"></div>`;
+        } else {
+          iconHtml = `<div class="base-marker" style="color:${color};text-shadow:0 0 10px ${color};font-size:17px;">\uD83E\uDE96</div>`;
+        }
+      }
       const icon = L.divIcon({
         className: 'marker-base',
-        html: `<div class="base-marker" style="color:${color};text-shadow:0 0 10px ${color};font-size:17px;${extraStyle}">${symbol}</div>`,
+        html: iconHtml,
         iconSize: [22, 22],
         iconAnchor: [11, 11]
       });
