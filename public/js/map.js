@@ -463,10 +463,10 @@ const MapModule = (function () {
   function updateDynamicStrikes(data) {
     if (!data || data.length === 0) return;
 
+    // Clear previous dynamic strikes and re-draw all
+    layers.strikes.clearLayers();
+
     data.forEach(s => {
-      // Skip if already have a static strike very close
-      const key = `dyn-${Math.round(s.lat * 10)}:${Math.round(s.lng * 10)}`;
-      if (markerCache.conflicts[key]) return;
 
       // Red pulsing circle for confirmed hit
       const circle = L.circle([s.lat, s.lng], {

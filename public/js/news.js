@@ -9,35 +9,16 @@ const NewsModule = (function () {
   function update(articles) {
     countEl.textContent = articles.length;
 
-    // Track existing IDs
-    const existingIds = new Set(currentItems.map(a => a.id));
-    const newArticles = articles.filter(a => !existingIds.has(a.id));
+    // Sort by timestamp newest first
+    const sorted = [...articles].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-    // Prepend new items with animation
-    newArticles.forEach(article => {
-      const el = createNewsElement(article);
-      if (feedEl.firstChild) {
-        feedEl.insertBefore(el, feedEl.firstChild);
-      } else {
-        feedEl.appendChild(el);
-      }
+    // Always re-render sorted (ensures correct order)
+    feedEl.innerHTML = '';
+    sorted.forEach(article => {
+      feedEl.appendChild(createNewsElement(article));
     });
 
-    // Update existing items (in case of changes)
-    if (currentItems.length === 0) {
-      // First load - render all
-      feedEl.innerHTML = '';
-      articles.forEach(article => {
-        feedEl.appendChild(createNewsElement(article));
-      });
-    }
-
-    // Trim to 6 items visible (scrollable)
-    while (feedEl.children.length > 6) {
-      feedEl.removeChild(feedEl.lastChild);
-    }
-
-    currentItems = articles;
+    currentItems = sorted;
 
     // Update tweets-only feed
     if (tweetFeedEl) {

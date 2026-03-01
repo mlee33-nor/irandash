@@ -40,55 +40,58 @@ function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 module.exports = async function scrapeTwitter() {
   const tweets = [];
-  let rateLimited = false;
+  let consecutive429 = 0;
 
-  // Try each account with staggered requests
+  // Try each account with staggered requests - don't stop on single 429
   for (let a = 0; a < ACCOUNTS.length; a++) {
     const account = ACCOUNTS[a];
-    if (rateLimited) break; // stop hammering if rate limited
 
-    // Small delay between accounts (shorter with proxy)
-    if (a > 0) await delay(500);
+    // Only stop if 3+ consecutive 429s (global rate limit vs per-account)
+    if (consecutive429 >= 3) {
+      console.log(`[twitter] stopping after ${consecutive429} consecutive 429s`);
+      break;
+    }
 
-    let success = false;
-    // Try up to 2 different UAs per account
-    for (let attempt = 0; attempt < 2 && !success; attempt++) {
-      const ua = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-      try {
-        const url = `https://syndication.twitter.com/srv/timeline-profile/screen-name/${account}`;
-        const response = await fetch(url, {
-          agent: proxyAgent,
-          timeout: 10000,
-          headers: {
-            'User-Agent': ua,
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Cache-Control': 'no-cache',
-          }
-        });
+    // Delay between accounts
+    if (a > 0) await delay(800);
 
-        if (response.status === 429) {
-          console.log(`[twitter] @${account}: rate limited (429)`);
-          rateLimited = true;
-          break;
+    const ua = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+    try {
+      const url = `https://syndication.twitter.com/srv/timeline-profile/screen-name/${account}`;
+      const response = await fetch(url, {
+        agent: proxyAgent,
+        timeout: 12000,
+        headers: {
+          'User-Agent': ua,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Cache-Control': 'no-cache',
         }
+      });
 
-        if (!response.ok) {
-          console.log(`[twitter] @${account}: ${response.status}`);
-          continue;
-        }
-
-        const html = await response.text();
-        const before = tweets.length;
-        parseSyndicationTweets(html, account, tweets);
-        const found = tweets.length - before;
-        if (found > 0) {
-          console.log(`[twitter] @${account}: ${found} tweets`);
-          success = true;
-        }
-      } catch (e) {
-        console.log(`[twitter] @${account}: ${e.message}`);
+      if (response.status === 429) {
+        console.log(`[twitter] @${account}: rate limited (429)`);
+        consecutive429++;
+        await delay(2000); // extra delay after 429
+        continue;
       }
+
+      consecutive429 = 0; // reset on non-429
+
+      if (!response.ok) {
+        console.log(`[twitter] @${account}: ${response.status}`);
+        continue;
+      }
+
+      const html = await response.text();
+      const before = tweets.length;
+      parseSyndicationTweets(html, account, tweets);
+      const found = tweets.length - before;
+      if (found > 0) {
+        console.log(`[twitter] @${account}: ${found} tweets`);
+      }
+    } catch (e) {
+      console.log(`[twitter] @${account}: ${e.message}`);
     }
   }
 
