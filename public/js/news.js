@@ -32,8 +32,8 @@ const NewsModule = (function () {
       });
     }
 
-    // Trim old items if too many
-    while (feedEl.children.length > 80) {
+    // Trim to 6 items visible (scrollable)
+    while (feedEl.children.length > 6) {
       feedEl.removeChild(feedEl.lastChild);
     }
 

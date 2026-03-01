@@ -116,6 +116,10 @@ const FEEDS = [
   'https://news.google.com/rss/search?q=%22strike+on+iran%22+OR+%22attacked+iran%22+OR+%22bombed+iran%22&hl=en-US&gl=US&ceid=US:en',
   'https://news.google.com/rss/search?q=iran+bomb+OR+airstrike+OR+missile+OR+explosion+location&hl=en-US&gl=US&ceid=US:en',
   'https://news.google.com/rss/search?q=%22iran+strike%22+city+OR+site+OR+facility+OR+base&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=iran+tehran+OR+isfahan+OR+natanz+OR+bushehr+strike+OR+bomb+OR+attack&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=%22iran%22+%22confirmed%22+strike+OR+hit+OR+attack+OR+target&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=iran+military+strike+OR+airstrike+breaking&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=iran+nuclear+site+OR+facility+strike+OR+bomb+OR+damage&hl=en-US&gl=US&ceid=US:en',
   'https://abcnews.go.com/abcnews/internationalheadlines',
   'https://moxie.foxnews.com/google-publisher/world.xml',
   'https://rss.nytimes.com/services/xml/rss/nyt/MiddleEast.xml',
@@ -123,6 +127,8 @@ const FEEDS = [
   'https://www.middleeasteye.net/rss',
   'https://www.timesofisrael.com/feed/',
   'https://www.jpost.com/rss/rssfeedsfrontpage.aspx',
+  'https://news.google.com/rss/search?q=iran+war+OR+invasion+OR+operation+today&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=US+OR+Israel+strikes+iran+2026&hl=en-US&gl=US&ceid=US:en',
 ];
 
 module.exports = async function scrapeStrikes() {
@@ -141,7 +147,7 @@ module.exports = async function scrapeStrikes() {
       // Only last 24 hours
       if (item.isoDate) {
         const age = Date.now() - new Date(item.isoDate).getTime();
-        if (age > 24 * 60 * 60 * 1000) continue;
+        if (age > 48 * 60 * 60 * 1000) continue;
       }
 
       const title = item.title || '';
@@ -149,15 +155,16 @@ module.exports = async function scrapeStrikes() {
       const text = `${title} ${snippet}`;
       const lower = text.toLowerCase();
 
-      // Must match strike ON Iran pattern OR contain military strike word + Iranian location
+      // Broader matching: strike ON Iran pattern, OR strike word + Iran ref, OR confirmed/breaking + Iran
       const isStrikeOnIran = STRIKE_ON_IRAN_PATTERNS.some(p => p.test(text));
-      const hasStrikeWord = /strike|struck|hit|bomb|airstrike|missile|explosion|blast|destroyed|raid/i.test(text);
-      const hasIranRef = /iran|tehran|isfahan|natanz|fordow|parchin|tabriz|shiraz|bushehr|mashhad|ahvaz|bandar abbas|qom|arak|kerman|dezful|hamadan|karaj|semnan|khuzestan/i.test(lower);
-      if (!isStrikeOnIran && !(hasStrikeWord && hasIranRef)) continue;
+      const hasStrikeWord = /strike|struck|hit|bomb|airstrike|missile|explosion|blast|destroyed|raid|attack|target|offensive|sortie|operation|damage|intercept/i.test(text);
+      const hasIranRef = /iran|tehran|isfahan|natanz|fordow|parchin|tabriz|shiraz|bushehr|mashhad|ahvaz|bandar abbas|qom|arak|kerman|dezful|hamadan|karaj|semnan|khuzestan|shahroud|jask|chahbahar|bandar|abadan|khorramabad|yazd|urmia/i.test(lower);
+      const isBreakingIran = /(?:breaking|confirmed|just in|developing|urgent)/i.test(text) && hasIranRef && /military|strike|attack|war|bomb|hit|casualt/i.test(text);
+      if (!isStrikeOnIran && !(hasStrikeWord && hasIranRef) && !isBreakingIran) continue;
 
       // Reject if Iran is the one doing the attacking (only if not explicit strike-on-iran pattern)
       const iranIsActor = IRAN_AS_ACTOR_PATTERNS.some(p => p.test(text));
-      if (iranIsActor && !isStrikeOnIran) continue;
+      if (iranIsActor && !isStrikeOnIran && !isBreakingIran) continue;
 
       // Find specific location - must be a real Iranian site, not generic
       let bestLoc = null;
@@ -183,7 +190,7 @@ module.exports = async function scrapeStrikes() {
         name: bestName,
         lat: bestLoc.lat + (Math.random() - 0.5) * 0.03,
         lng: bestLoc.lng + (Math.random() - 0.5) * 0.03,
-        date: item.isoDate ? item.isoDate.split('T')[0] : new Date().toISOString().split('T')[0],
+        date: item.isoDate ? item.isoDate.split('T')[0] : getLocalDate(),
         desc: title.slice(0, 300),
         source: item.link || 'RSS',
         title: title,
@@ -227,7 +234,7 @@ module.exports = async function scrapeStrikes() {
               name: cityName,
               lat,
               lng,
-              date: props.dateadded ? formatGdeltDate(props.dateadded) : new Date().toISOString().split('T')[0],
+              date: props.dateadded ? formatGdeltDate(props.dateadded) : getLocalDate(),
               desc: (props.name || '').slice(0, 300),
               source: props.url || 'GDELT',
               title: (props.name || '').slice(0, 200),
@@ -241,8 +248,11 @@ module.exports = async function scrapeStrikes() {
 
   // Source 3: Direct news page scraping for live updates with location mentions
   const LIVE_PAGES = [
-    'https://news.google.com/rss/search?q=iran+strike+location+city+site&hl=en-US&gl=US&ceid=US:en&num=20',
-    'https://news.google.com/rss/search?q=%22iran%22+%22struck%22+OR+%22bombed%22+OR+%22hit%22+OR+%22explosion%22&hl=en-US&gl=US&ceid=US:en&num=20',
+    'https://news.google.com/rss/search?q=iran+strike+location+city+site&hl=en-US&gl=US&ceid=US:en&num=30',
+    'https://news.google.com/rss/search?q=%22iran%22+%22struck%22+OR+%22bombed%22+OR+%22hit%22+OR+%22explosion%22&hl=en-US&gl=US&ceid=US:en&num=30',
+    'https://news.google.com/rss/search?q=iran+tehran+isfahan+tabriz+shiraz+strike+OR+attack+OR+hit&hl=en-US&gl=US&ceid=US:en&num=30',
+    'https://news.google.com/rss/search?q=%22strikes+on+iran%22+OR+%22bombing+iran%22+OR+%22iran+under+attack%22&hl=en-US&gl=US&ceid=US:en&num=30',
+    'https://news.google.com/rss/search?q=iran+natanz+OR+fordow+OR+parchin+OR+bushehr+attack+OR+strike+OR+damage&hl=en-US&gl=US&ceid=US:en&num=30',
   ];
 
   try {
@@ -255,15 +265,15 @@ module.exports = async function scrapeStrikes() {
       for (const item of items.slice(0, 30)) {
         if (item.isoDate) {
           const age = Date.now() - new Date(item.isoDate).getTime();
-          if (age > 24 * 60 * 60 * 1000) continue;
+          if (age > 48 * 60 * 60 * 1000) continue;
         }
         const title = item.title || '';
         const snippet = item.contentSnippet || item.content || '';
         const text = `${title} ${snippet}`;
         const lower = text.toLowerCase();
 
-        // Look for ANY Iranian city/site mentioned alongside strike language
-        const hasStrikeWord = /strike|struck|hit|bomb|attack|airstrike|missile|explosion|blast|destroyed|damaged|target/i.test(text);
+        // Look for ANY Iranian city/site mentioned alongside strike/military language
+        const hasStrikeWord = /strike|struck|hit|bomb|attack|airstrike|missile|explosion|blast|destroyed|damaged|target|offensive|sortie|operation|war|raid|intercept|shell|artillery|cruise|bunker|casualties|killed|dead/i.test(text);
         if (!hasStrikeWord) continue;
 
         // Find all matching locations in this article
@@ -281,7 +291,7 @@ module.exports = async function scrapeStrikes() {
               name: place.charAt(0).toUpperCase() + place.slice(1),
               lat: coords.lat + (Math.random() - 0.5) * 0.02,
               lng: coords.lng + (Math.random() - 0.5) * 0.02,
-              date: item.isoDate ? item.isoDate.split('T')[0] : new Date().toISOString().split('T')[0],
+              date: item.isoDate ? item.isoDate.split('T')[0] : getLocalDate(),
               desc: title.slice(0, 300),
               source: item.link || 'Live Updates',
               title: title,
@@ -323,6 +333,12 @@ function findNearestCity(lat, lng) {
 }
 
 function formatGdeltDate(dateStr) {
-  if (!dateStr || dateStr.length < 8) return new Date().toISOString().split('T')[0];
+  if (!dateStr || dateStr.length < 8) return getLocalDate();
   return `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
+}
+
+// Use local date to avoid UTC being a day ahead
+function getLocalDate() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
