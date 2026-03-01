@@ -115,9 +115,9 @@
 
     const streams = {
       'aljazeera': 'https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=1&mute=1',
-      'france24': 'https://www.youtube.com/embed/Ap-UM1O9RBk?autoplay=1&mute=1',
-      'dw': 'https://www.youtube.com/embed/V5N1IVlnIpE?autoplay=1&mute=1',
-      'sky': 'https://www.youtube.com/embed/9Auq9mYxFEE?autoplay=1&mute=1',
+      'france24': 'https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=1&mute=1',
+      'dw': 'https://www.youtube.com/embed/LuKwFajn37U?autoplay=1&mute=1',
+      'sky': 'https://www.youtube.com/embed/YDvsBbKfLPA?autoplay=1&mute=1',
     };
 
     streamToggle.addEventListener('click', () => {

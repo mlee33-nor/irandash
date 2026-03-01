@@ -149,13 +149,15 @@ module.exports = async function scrapeStrikes() {
       const text = `${title} ${snippet}`;
       const lower = text.toLowerCase();
 
-      // Must match at least one "strike ON Iran" pattern
+      // Must match strike ON Iran pattern OR contain military strike word + Iranian location
       const isStrikeOnIran = STRIKE_ON_IRAN_PATTERNS.some(p => p.test(text));
-      if (!isStrikeOnIran) continue;
+      const hasStrikeWord = /strike|struck|hit|bomb|airstrike|missile|explosion|blast|destroyed|raid/i.test(text);
+      const hasIranRef = /iran|tehran|isfahan|natanz|fordow|parchin|tabriz|shiraz|bushehr|mashhad|ahvaz|bandar abbas|qom|arak|kerman|dezful|hamadan|karaj|semnan|khuzestan/i.test(lower);
+      if (!isStrikeOnIran && !(hasStrikeWord && hasIranRef)) continue;
 
-      // Reject if Iran is the one doing the attacking
+      // Reject if Iran is the one doing the attacking (only if not explicit strike-on-iran pattern)
       const iranIsActor = IRAN_AS_ACTOR_PATTERNS.some(p => p.test(text));
-      if (iranIsActor) continue;
+      if (iranIsActor && !isStrikeOnIran) continue;
 
       // Find specific location - must be a real Iranian site, not generic
       let bestLoc = null;

@@ -2,6 +2,9 @@ const fetch = require('node-fetch');
 
 const ACCOUNTS = [
   'BRICSinfo',
+  'sentaborsen',
+  'IntelDoge',
+  'IsraelRadar_com',
 ];
 
 module.exports = async function scrapeTwitter() {
@@ -50,8 +53,8 @@ module.exports = async function scrapeTwitter() {
             const parsed = new Date(dateMatch[1]);
             if (!isNaN(parsed.getTime())) {
               timestamp = parsed.toISOString();
-              // Only last 24 hours
-              if (Date.now() - parsed.getTime() > 24 * 60 * 60 * 1000) continue;
+              // Only last 48 hours (wider window for active conflict)
+              if (Date.now() - parsed.getTime() > 48 * 60 * 60 * 1000) continue;
             }
           }
         }
