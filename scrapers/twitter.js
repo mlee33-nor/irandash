@@ -9,77 +9,68 @@ const ACCOUNTS = [
   'IsraelRadar_com',
 ];
 
-// Nitter instances to try as fallback (public, no auth needed)
-const NITTER_INSTANCES = [
-  'https://nitter.privacydev.net',
-  'https://nitter.poast.org',
-  'https://nitter.woodland.cafe',
+// Rotate user agents to avoid rate limiting
+const USER_AGENTS = [
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (X11; Linux x86_64; rv:123.0) Gecko/20100101 Firefox/123.0',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
 ];
+let uaIndex = 0;
 
 module.exports = async function scrapeTwitter() {
   const tweets = [];
 
-  // Method 1: Twitter syndication API
+  // Method 1: Twitter syndication API with rotating user agents
   for (const account of ACCOUNTS) {
     try {
+      const ua = USER_AGENTS[uaIndex % USER_AGENTS.length];
+      uaIndex++;
       const url = `https://syndication.twitter.com/srv/timeline-profile/screen-name/${account}`;
       const response = await fetch(url, {
         timeout: 10000,
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+        headers: {
+          'User-Agent': ua,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9',
+          'Accept-Language': 'en-US,en;q=0.9',
+        }
       });
 
+      if (response.status === 429) {
+        // Rate limited - try next UA
+        const retryUA = USER_AGENTS[uaIndex % USER_AGENTS.length];
+        uaIndex++;
+        console.log(`[twitter] @${account}: 429, retrying with different UA`);
+        const retry = await fetch(url, {
+          timeout: 10000,
+          headers: {
+            'User-Agent': retryUA,
+            'Accept': 'text/html,application/xhtml+xml',
+            'Accept-Language': 'en-US,en;q=0.9',
+          }
+        });
+        if (retry.ok) {
+          const html = await retry.text();
+          parseSyndicationTweets(html, account, tweets);
+        } else {
+          console.log(`[twitter] @${account}: retry ${retry.status}`);
+        }
+        continue;
+      }
+
       if (!response.ok) {
-        console.log(`[twitter] syndication @${account}: ${response.status}`);
+        console.log(`[twitter] @${account}: ${response.status}`);
         continue;
       }
 
       const html = await response.text();
       parseSyndicationTweets(html, account, tweets);
-      console.log(`[twitter] syndication @${account}: ${tweets.length} tweets`);
     } catch (e) {
-      console.log(`[twitter] syndication @${account}: ${e.message}`);
+      console.log(`[twitter] @${account}: ${e.message}`);
     }
   }
-
-  // Method 2: If syndication failed (rate limited), try Nitter RSS
-  if (tweets.length === 0) {
-    for (const instance of NITTER_INSTANCES) {
-      if (tweets.length > 0) break; // got some, stop trying
-      for (const account of ACCOUNTS) {
-        try {
-          const rssUrl = `${instance}/${account}/rss`;
-          const feed = await Promise.race([
-            parser.parseURL(rssUrl),
-            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))
-          ]);
-          if (feed && feed.items) {
-            for (const item of feed.items.slice(0, 15)) {
-              if (item.isoDate) {
-                const age = Date.now() - new Date(item.isoDate).getTime();
-                if (age > 48 * 60 * 60 * 1000) continue;
-              }
-              const text = (item.title || item.contentSnippet || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-              if (text.length < 20) continue;
-
-              tweets.push({
-                id: `x-${account}-${Buffer.from(item.link || text).toString('base64').slice(0, 16)}`,
-                title: text.slice(0, 200),
-                summary: text.length > 200 ? text.slice(200, 400) : '',
-                source: `X/@${account}`,
-                url: item.link ? item.link.replace(instance, 'https://x.com') : `https://x.com/${account}`,
-                timestamp: item.isoDate || new Date().toISOString(),
-                severity: getSeverity(text),
-                location: null
-              });
-            }
-            console.log(`[twitter] nitter @${account}: ${tweets.length} tweets via ${instance}`);
-          }
-        } catch (e) {
-          // nitter instance down, try next
-        }
-      }
-    }
-  }
+  if (tweets.length > 0) console.log(`[twitter] syndication: ${tweets.length} tweets total`);
 
   // Method 3: Google News search for these accounts as last resort
   if (tweets.length === 0) {

@@ -47,13 +47,16 @@ const MapModule = (function () {
     { name: 'ADEN PORT', lat: 12.80, lng: 45.02, country: 'Yemen', type: 'naval', desc: 'Coalition naval ops. UAE-aligned forces. Red Sea chokepoint control.' },
     // Military ground bases
     { name: 'PARCHIN MILITARY COMPLEX', lat: 35.52, lng: 51.77, country: 'Iran', type: 'military', desc: 'IRGC weapons R&D. Suspected nuclear weapons testing. High-explosive test chambers.' },
-    { name: 'NATANZ ENRICHMENT FACILITY', lat: 33.51, lng: 51.73, country: 'Iran', type: 'military', desc: 'Primary uranium enrichment site. Underground centrifuge halls. Stuxnet target 2010.' },
-    { name: 'FORDOW ENRICHMENT PLANT', lat: 34.88, lng: 51.59, country: 'Iran', type: 'military', desc: 'Hardened underground enrichment. Built inside mountain near Qom. 60% enrichment.' },
+    { name: 'NATANZ ENRICHMENT FACILITY', lat: 33.51, lng: 51.73, country: 'Iran', type: 'nuclear', desc: 'Primary uranium enrichment site. Underground centrifuge halls. Stuxnet target 2010.' },
+    { name: 'FORDOW ENRICHMENT PLANT', lat: 34.88, lng: 51.59, country: 'Iran', type: 'nuclear', desc: 'Hardened underground enrichment. Built inside mountain near Qom. 60% enrichment.' },
     { name: 'IRGC HQ TEHRAN', lat: 35.70, lng: 51.42, country: 'Iran', type: 'military', desc: 'Islamic Revolutionary Guard Corps headquarters. Command & control center.' },
     { name: 'SHAHROUD MISSILE BASE', lat: 36.42, lng: 55.02, country: 'Iran', type: 'military', desc: 'IRGC Aerospace Force. Shahab-3, Emad, Khorramshahr ballistic missiles. Space launch.' },
     { name: 'IMAM ALI BASE', lat: 34.55, lng: 45.75, country: 'Iraq', type: 'military', desc: 'IRGC-linked Iraqi PMF base. Iran weapons transfer hub near Syria border.' },
     { name: 'PALMYRA / T4 AIRBASE', lat: 34.52, lng: 37.63, country: 'Syria', type: 'military', desc: 'IRGC drone operations. Repeatedly struck by Israel. Iran forward staging.' },
-    { name: 'DIMONA NUCLEAR CENTER', lat: 31.00, lng: 35.14, country: 'Israel', type: 'military', desc: 'Negev Nuclear Research Center. Plutonium production reactor. Israel nuclear arsenal.' },
+    { name: 'DIMONA NUCLEAR CENTER', lat: 31.00, lng: 35.14, country: 'Israel', type: 'nuclear', desc: 'Negev Nuclear Research Center. Plutonium production reactor. Israel nuclear arsenal.' },
+    { name: 'BUSHEHR NUCLEAR PLANT', lat: 28.83, lng: 50.89, country: 'Iran', type: 'nuclear', desc: 'Iran only operating nuclear power plant. Russian-built VVER-1000 reactor. IAEA monitored.' },
+    { name: 'ISFAHAN UCF', lat: 32.60, lng: 51.72, country: 'Iran', type: 'nuclear', desc: 'Uranium Conversion Facility. Converts yellowcake to UF6 gas for enrichment. Key fuel cycle node.' },
+    { name: 'ARAK IR-40 REACTOR', lat: 34.05, lng: 49.25, country: 'Iran', type: 'nuclear', desc: 'Heavy water research reactor. Redesigned under JCPOA. Plutonium pathway concern.' },
     { name: 'IDF NORTHERN COMMAND', lat: 32.79, lng: 35.53, country: 'Israel', type: 'military', desc: 'IDF Northern Command HQ. Lebanon/Syria front. Galilee Div, 36th Div ops.' },
     { name: 'IDF SOUTHERN COMMAND', lat: 31.25, lng: 34.79, country: 'Israel', type: 'military', desc: 'IDF Southern Command. Gaza operations. 162nd Div, 252nd Div. Rafah crossing ops.' },
     { name: 'KING ABDULAZIZ AB', lat: 26.27, lng: 50.15, country: 'Saudi Arabia', type: 'military', desc: 'RSAF F-15SA Eagles. Eastern Province air defense. Gulf coalition ops.' },
@@ -103,18 +106,21 @@ const MapModule = (function () {
 
   function drawNavalBases() {
     NAVAL_BASES.forEach(base => {
-      let color, symbol;
+      let color, symbol, extraStyle = '';
       if (base.type === 'naval') {
-        color = '#3399ff'; symbol = '\u2693'; // anchor
+        color = '#3399ff'; symbol = '\u2693'; // anchor ⚓
       } else if (base.type === 'airbase') {
-        color = '#ffaa00'; symbol = '\uD83D\uDEEC'; // landing/runway 🛬
+        color = '#ffaa00'; symbol = '\uD83D\uDEEC'; // landing strip 🛬
+      } else if (base.type === 'nuclear') {
+        color = '#a855f7'; symbol = '\u2622\uFE0F'; // radioactive ☢️
+        extraStyle = 'animation:nuclearGlow 2s infinite;';
       } else {
         color = '#ef4444'; symbol = '\uD83E\uDE96'; // military helmet 🪖
       }
 
       const icon = L.divIcon({
         className: 'marker-base',
-        html: `<div class="base-marker" style="color:${color};text-shadow:0 0 8px ${color};font-size:17px">${symbol}</div>`,
+        html: `<div class="base-marker" style="color:${color};text-shadow:0 0 10px ${color};font-size:17px;${extraStyle}">${symbol}</div>`,
         iconSize: [22, 22],
         iconAnchor: [11, 11]
       });
