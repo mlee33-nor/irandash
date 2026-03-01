@@ -768,8 +768,43 @@ html, body {
   position: relative;
 }
 
-.bottom-section.collapsed .bottom-content {
+.bottom-section.collapsed .bottom-content,
+.bottom-section.collapsed .bottom-tabs {
   display: none;
+}
+
+.bottom-tabs {
+  display: flex;
+  background: var(--bg-panel-header);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.btab {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.btab:hover {
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.btab.active {
+  color: var(--accent-blue);
+  border-bottom-color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.05);
 }
 
 .bottom-drag-handle {

@@ -2,9 +2,9 @@ const RSSParser = require('rss-parser');
 const fetch = require('node-fetch');
 const parser = new RSSParser();
 
-// Comprehensive Iranian military/nuclear sites, cities, and strategic facilities
+// Full theater targets: Iran + Israel + Lebanon + Syria + Iraq + Yemen
 const IRAN_TARGETS = {
-  // Nuclear facilities
+  // === IRAN - Nuclear facilities ===
   'natanz': { lat: 33.51, lng: 51.73, type: 'nuclear' },
   'fordow': { lat: 34.88, lng: 51.59, type: 'nuclear' },
   'bushehr nuclear': { lat: 28.83, lng: 50.89, type: 'nuclear' },
@@ -13,7 +13,7 @@ const IRAN_TARGETS = {
   'uranium conversion facility': { lat: 32.60, lng: 51.72, type: 'nuclear' },
   'enrichment facility': { lat: 33.51, lng: 51.73, type: 'nuclear' },
 
-  // Military bases and complexes
+  // Iran - Military bases
   'parchin': { lat: 35.52, lng: 51.77, type: 'military' },
   'khojir': { lat: 35.58, lng: 51.66, type: 'military' },
   'imam ali base': { lat: 34.55, lng: 45.75, type: 'military' },
@@ -30,15 +30,13 @@ const IRAN_TARGETS = {
   'vahdati': { lat: 32.43, lng: 48.38, type: 'military' },
   'shahrokhi': { lat: 34.87, lng: 48.65, type: 'military' },
 
-  // Missile sites
+  // Iran - Missile sites
   'shahroud': { lat: 36.42, lng: 55.02, type: 'missile' },
   'semnan missile': { lat: 35.23, lng: 53.55, type: 'missile' },
   'shahrud missile': { lat: 36.42, lng: 55.02, type: 'missile' },
-  'missile site': { lat: 35.52, lng: 51.77, type: 'missile' },
-  'launch site': { lat: 35.23, lng: 53.55, type: 'missile' },
   'tabriz missile': { lat: 38.08, lng: 46.29, type: 'missile' },
 
-  // IRGC and naval
+  // Iran - Naval
   'bandar abbas': { lat: 27.19, lng: 56.28, type: 'naval' },
   'bandar-e jask': { lat: 25.64, lng: 57.77, type: 'naval' },
   'chahbahar': { lat: 25.30, lng: 60.63, type: 'naval' },
@@ -51,7 +49,7 @@ const IRAN_TARGETS = {
   'farsi island': { lat: 27.17, lng: 53.12, type: 'naval' },
   'qeshm': { lat: 26.95, lng: 56.27, type: 'naval' },
 
-  // Major cities
+  // Iran - Cities
   'tehran': { lat: 35.69, lng: 51.39, type: 'city' },
   'isfahan': { lat: 32.65, lng: 51.68, type: 'city' },
   'bushehr': { lat: 28.97, lng: 50.84, type: 'city' },
@@ -83,43 +81,97 @@ const IRAN_TARGETS = {
   'kish island': { lat: 26.54, lng: 53.98, type: 'city' },
   'mahshahr': { lat: 30.56, lng: 49.19, type: 'city' },
   'khuzestan': { lat: 31.32, lng: 48.67, type: 'city' },
+
+  // === ISRAEL - Cities ===
+  'tel aviv': { lat: 32.08, lng: 34.78, type: 'city' },
+  'jerusalem': { lat: 31.77, lng: 35.23, type: 'city' },
+  'haifa': { lat: 32.79, lng: 34.99, type: 'city' },
+  'beer sheva': { lat: 31.25, lng: 34.79, type: 'city' },
+  'be\'er sheva': { lat: 31.25, lng: 34.79, type: 'city' },
+  'beersheba': { lat: 31.25, lng: 34.79, type: 'city' },
+  'ashkelon': { lat: 31.67, lng: 34.57, type: 'city' },
+  'ashdod': { lat: 31.80, lng: 34.65, type: 'city' },
+  'netanya': { lat: 32.33, lng: 34.86, type: 'city' },
+  'herzliya': { lat: 32.16, lng: 34.78, type: 'city' },
+  'eilat': { lat: 29.56, lng: 34.95, type: 'city' },
+  'sderot': { lat: 31.52, lng: 34.60, type: 'city' },
+  'kiryat shmona': { lat: 33.21, lng: 35.57, type: 'city' },
+  'nahariya': { lat: 33.01, lng: 35.10, type: 'city' },
+  'dimona': { lat: 31.07, lng: 35.03, type: 'nuclear' },
+  'rishon lezion': { lat: 31.97, lng: 34.77, type: 'city' },
+  'petah tikva': { lat: 32.09, lng: 34.89, type: 'city' },
+  'rehovot': { lat: 31.89, lng: 34.81, type: 'city' },
+  'modiin': { lat: 31.90, lng: 35.01, type: 'city' },
+  'tiberias': { lat: 32.79, lng: 35.53, type: 'city' },
+  'nazareth': { lat: 32.70, lng: 35.30, type: 'city' },
+  'acre': { lat: 32.93, lng: 35.08, type: 'city' },
+
+  // Israel - Military / Strategic
+  'nevatim': { lat: 31.21, lng: 34.93, type: 'military' },
+  'ramon airbase': { lat: 30.78, lng: 34.67, type: 'military' },
+  'ramat david': { lat: 32.67, lng: 35.18, type: 'military' },
+  'hatzerim': { lat: 31.23, lng: 34.66, type: 'military' },
+  'palmachim': { lat: 31.90, lng: 34.69, type: 'military' },
+  'tel nof': { lat: 31.84, lng: 34.82, type: 'military' },
+  'negev': { lat: 30.85, lng: 34.78, type: 'military' },
+  'golan heights': { lat: 33.00, lng: 35.75, type: 'military' },
+  'golan': { lat: 33.00, lng: 35.75, type: 'military' },
+  'west bank': { lat: 31.95, lng: 35.25, type: 'city' },
+  'gaza': { lat: 31.50, lng: 34.47, type: 'city' },
+
+  // === LEBANON ===
+  'beirut': { lat: 33.89, lng: 35.50, type: 'city' },
+  'dahiyeh': { lat: 33.85, lng: 35.49, type: 'military' },
+  'baalbek': { lat: 34.01, lng: 36.21, type: 'military' },
+  'sidon': { lat: 33.56, lng: 35.37, type: 'city' },
+  'tyre': { lat: 33.27, lng: 35.20, type: 'city' },
+  'nabatieh': { lat: 33.38, lng: 35.48, type: 'city' },
+  'bekaa': { lat: 33.85, lng: 35.90, type: 'military' },
+  'south lebanon': { lat: 33.30, lng: 35.40, type: 'military' },
+
+  // === SYRIA ===
+  'damascus': { lat: 33.51, lng: 36.29, type: 'city' },
+  'aleppo': { lat: 36.20, lng: 37.17, type: 'city' },
+  'homs': { lat: 34.73, lng: 36.71, type: 'city' },
+  'latakia': { lat: 35.52, lng: 35.79, type: 'city' },
+  'deir ez-zor': { lat: 35.34, lng: 40.14, type: 'city' },
+  'palmyra': { lat: 34.56, lng: 38.28, type: 'city' },
+  't4 airbase': { lat: 34.52, lng: 37.63, type: 'military' },
+
+  // === IRAQ ===
+  'baghdad': { lat: 33.31, lng: 44.37, type: 'city' },
+  'erbil': { lat: 36.19, lng: 44.01, type: 'city' },
+  'al asad': { lat: 33.79, lng: 42.44, type: 'military' },
+  'ain al-asad': { lat: 33.79, lng: 42.44, type: 'military' },
+  'basra': { lat: 30.51, lng: 47.81, type: 'city' },
+
+  // === YEMEN ===
+  'sanaa': { lat: 15.37, lng: 44.19, type: 'city' },
+  'hodeidah': { lat: 14.80, lng: 42.95, type: 'city' },
+  'aden': { lat: 12.79, lng: 45.02, type: 'city' },
+  'marib': { lat: 15.46, lng: 45.33, type: 'city' },
 };
 
-// These phrases indicate an actual strike ON Iran, not Iran doing something
-const STRIKE_ON_IRAN_PATTERNS = [
-  /(?:strike|struck|hit|bomb|attack|target|raid)\w*\s+(?:on|in|inside|within|against|near)\s+iran/i,
-  /iran\w*\s+(?:struck|hit|bombed|attacked|targeted|raided)/i,
-  /(?:israel|idf|us|u\.s\.|american|coalition|military)\s+(?:strike|attack|bomb|hit|raid|launch)\w*\s+(?:iran|tehran|isfahan|natanz|parchin|fordow|tabriz|shiraz|bushehr|mashhad|ahvaz|bandar abbas|qom|arak|kerman)/i,
-  /(?:explosion|blast|damage|destroyed|crater)\w*\s+(?:in|at|near|reported)\s+(?:iran|tehran|isfahan|natanz|parchin|fordow|bushehr|tabriz|shiraz|mashhad|ahvaz|bandar abbas|qom|arak|kerman|dezful|hamadan|karaj|semnan|khuzestan)/i,
-  /(?:strike|attack|bomb|airstrike|missile)\w*\s+(?:iran\w*\s+)?(?:military|nuclear|missile|air defense|radar|base|facility|site|installation|command|center|bunker|port)/i,
-  /(?:iran|iranian)\s+(?:site|base|facility|installation|target|position|command)\s+(?:struck|hit|destroyed|damaged|targeted|neutralized)/i,
-  /(?:bomb|airstrike|missile|cruise missile|bunker buster|sortie)\w*\s+(?:hit|struck|landed|impacted|destroyed)\s+(?:in|near|at)\s+(?:iran|tehran|isfahan)/i,
-  /(?:preemptive|retaliatory|massive|precision)\s+(?:strike|attack|bombing|operation)\s+(?:on|against|in|inside)\s+iran/i,
-  /iran\w*\s+(?:under\s+(?:attack|fire|bombardment)|being\s+(?:bombed|struck|attacked))/i,
-  /(?:military\s+strikes|airstrikes|bombing\s+campaign|operations)\s+(?:on|in|against|inside|targeting)\s+iran/i,
-];
-
-// These phrases mean Iran is the ACTOR not the TARGET - reject these
-const IRAN_AS_ACTOR_PATTERNS = [
-  /iran\w*\s+(?:attack|strike|bomb|launch|fire|hit)\w*\s+(?:israel|us|base|ship|force)/i,
-  /iran\w*\s+(?:threat|warn|vow|promise|retaliat)/i,
-  /iran\w*\s+(?:sanction|nuclear deal|negotiat|diplomac)/i,
-  /iran\w*\s+(?:proxy|militia|support|fund|back)/i,
-  /(?:houthi|hezbollah|hamas)\s+(?:attack|strike|launch)/i,
+// Patterns indicating actual strikes/attacks in the theater (any direction)
+const STRIKE_PATTERNS = [
+  /(?:strike|struck|hit|bomb|attack|target|raid|missile|rocket|barrage|salvo)\w*\s+(?:on|in|inside|within|against|near)\s+(?:iran|israel|lebanon|syria|iraq|yemen|gaza)/i,
+  /(?:iran|israel|lebanon|beirut|damascus|tel aviv|jerusalem|haifa|gaza)\w*\s+(?:struck|hit|bombed|attacked|targeted|raided|shelled)/i,
+  /(?:explosion|blast|damage|destroyed|crater|impact|siren)\w*\s+(?:in|at|near|reported|heard)\s+(?:iran|israel|lebanon|syria|iraq|tehran|isfahan|tel aviv|jerusalem|haifa|beirut|damascus|gaza|baghdad|sanaa)/i,
+  /(?:strike|attack|bomb|airstrike|missile|rocket|drone)\w*\s+(?:military|nuclear|missile|air defense|radar|base|facility|site|installation|command|center|bunker|port|airbase|city)/i,
+  /(?:preemptive|retaliatory|massive|precision|ballistic|cruise)\s+(?:strike|attack|bombing|operation|missile)\s+(?:on|against|in|inside|toward|at)\s+(?:iran|israel|lebanon|syria)/i,
+  /(?:under\s+(?:attack|fire|bombardment)|being\s+(?:bombed|struck|attacked|shelled))/i,
+  /(?:iron dome|arrow|david.s sling|thaad)\s+(?:intercept|activat|engag|fire)/i,
+  /(?:missile|rocket|drone|uav)\s+(?:hit|struck|landed|impacted|intercepted)\s+(?:in|near|at|over)\s+(?:israel|tel aviv|jerusalem|haifa|negev|golan|eilat|ashkelon|ashdod|beer sheva|sderot)/i,
+  /(?:houthi|hezbollah|irgc|iran)\w*\s+(?:launch|fire|send|attack)\w*\s+(?:missile|rocket|drone|barrage|salvo)\w*\s+(?:at|on|toward|into|against)\s+(?:israel|tel aviv|haifa|eilat)/i,
+  /(?:sirens?|red alert|code red)\s+(?:in|across|throughout)\s+(?:israel|tel aviv|jerusalem|haifa|north|south|central)/i,
 ];
 
 const FEEDS = [
+  // General Middle East news
   'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml',
   'https://www.aljazeera.com/xml/rss/all.xml',
   'https://feeds.washingtonpost.com/rss/world',
   'https://rss.app/feeds/v1.1/tFnGReFbiVMuYN3q.xml',
-  'https://news.google.com/rss/search?q=%22strike+on+iran%22+OR+%22attacked+iran%22+OR+%22bombed+iran%22&hl=en-US&gl=US&ceid=US:en',
-  'https://news.google.com/rss/search?q=iran+bomb+OR+airstrike+OR+missile+OR+explosion+location&hl=en-US&gl=US&ceid=US:en',
-  'https://news.google.com/rss/search?q=%22iran+strike%22+city+OR+site+OR+facility+OR+base&hl=en-US&gl=US&ceid=US:en',
-  'https://news.google.com/rss/search?q=iran+tehran+OR+isfahan+OR+natanz+OR+bushehr+strike+OR+bomb+OR+attack&hl=en-US&gl=US&ceid=US:en',
-  'https://news.google.com/rss/search?q=%22iran%22+%22confirmed%22+strike+OR+hit+OR+attack+OR+target&hl=en-US&gl=US&ceid=US:en',
-  'https://news.google.com/rss/search?q=iran+military+strike+OR+airstrike+breaking&hl=en-US&gl=US&ceid=US:en',
-  'https://news.google.com/rss/search?q=iran+nuclear+site+OR+facility+strike+OR+bomb+OR+damage&hl=en-US&gl=US&ceid=US:en',
   'https://abcnews.go.com/abcnews/internationalheadlines',
   'https://moxie.foxnews.com/google-publisher/world.xml',
   'https://rss.nytimes.com/services/xml/rss/nyt/MiddleEast.xml',
@@ -127,8 +179,17 @@ const FEEDS = [
   'https://www.middleeasteye.net/rss',
   'https://www.timesofisrael.com/feed/',
   'https://www.jpost.com/rss/rssfeedsfrontpage.aspx',
-  'https://news.google.com/rss/search?q=iran+war+OR+invasion+OR+operation+today&hl=en-US&gl=US&ceid=US:en',
-  'https://news.google.com/rss/search?q=US+OR+Israel+strikes+iran+2026&hl=en-US&gl=US&ceid=US:en',
+  // Iran strikes
+  'https://news.google.com/rss/search?q=%22strike+on+iran%22+OR+%22attacked+iran%22+OR+%22bombed+iran%22&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=iran+tehran+OR+isfahan+OR+natanz+strike+OR+bomb+OR+attack&hl=en-US&gl=US&ceid=US:en',
+  // Israel strikes / missile attacks on Israel
+  'https://news.google.com/rss/search?q=israel+missile+OR+rocket+OR+strike+OR+attack+OR+siren+OR+intercept&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=%22tel+aviv%22+OR+%22jerusalem%22+OR+%22haifa%22+missile+OR+rocket+OR+attack+OR+siren&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=iran+attack+israel+OR+%22ballistic+missile%22+OR+%22iron+dome%22+OR+%22red+alert%22&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=hezbollah+OR+houthi+attack+OR+missile+OR+rocket+israel&hl=en-US&gl=US&ceid=US:en',
+  // Lebanon / Syria / Iraq theater
+  'https://news.google.com/rss/search?q=beirut+OR+damascus+OR+baghdad+strike+OR+attack+OR+airstrike+OR+explosion&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=middle+east+war+OR+strike+OR+attack+OR+missile+breaking&hl=en-US&gl=US&ceid=US:en',
 ];
 
 module.exports = async function scrapeStrikes() {
@@ -155,16 +216,12 @@ module.exports = async function scrapeStrikes() {
       const text = `${title} ${snippet}`;
       const lower = text.toLowerCase();
 
-      // Broader matching: strike ON Iran pattern, OR strike word + Iran ref, OR confirmed/breaking + Iran
-      const isStrikeOnIran = STRIKE_ON_IRAN_PATTERNS.some(p => p.test(text));
-      const hasStrikeWord = /strike|struck|hit|bomb|airstrike|missile|explosion|blast|destroyed|raid|attack|target|offensive|sortie|operation|damage|intercept/i.test(text);
-      const hasIranRef = /iran|tehran|isfahan|natanz|fordow|parchin|tabriz|shiraz|bushehr|mashhad|ahvaz|bandar abbas|qom|arak|kerman|dezful|hamadan|karaj|semnan|khuzestan|shahroud|jask|chahbahar|bandar|abadan|khorramabad|yazd|urmia/i.test(lower);
-      const isBreakingIran = /(?:breaking|confirmed|just in|developing|urgent)/i.test(text) && hasIranRef && /military|strike|attack|war|bomb|hit|casualt/i.test(text);
-      if (!isStrikeOnIran && !(hasStrikeWord && hasIranRef) && !isBreakingIran) continue;
-
-      // Reject if Iran is the one doing the attacking (only if not explicit strike-on-iran pattern)
-      const iranIsActor = IRAN_AS_ACTOR_PATTERNS.some(p => p.test(text));
-      if (iranIsActor && !isStrikeOnIran && !isBreakingIran) continue;
+      // Match: known strike pattern, OR strike word + theater location ref, OR breaking + theater
+      const isStrikePattern = STRIKE_PATTERNS.some(p => p.test(text));
+      const hasStrikeWord = /strike|struck|hit|bomb|airstrike|missile|explosion|blast|destroyed|raid|attack|target|offensive|sortie|operation|damage|intercept|rocket|barrage|siren|drone|salvo/i.test(text);
+      const hasTheaterRef = /iran|israel|lebanon|syria|iraq|yemen|tehran|isfahan|natanz|fordow|parchin|tabriz|shiraz|bushehr|tel aviv|jerusalem|haifa|beer sheva|ashkelon|ashdod|eilat|sderot|nevatim|beirut|damascus|baghdad|sanaa|gaza|golan|negev/i.test(lower);
+      const isBreaking = /(?:breaking|confirmed|just in|developing|urgent)/i.test(text) && hasTheaterRef && /military|strike|attack|war|bomb|hit|casualt|missile|rocket|siren/i.test(text);
+      if (!isStrikePattern && !(hasStrikeWord && hasTheaterRef) && !isBreaking) continue;
 
       // Find specific location - must be a real Iranian site, not generic
       let bestLoc = null;
@@ -199,10 +256,10 @@ module.exports = async function scrapeStrikes() {
     }
   }
 
-  // Source 2: GDELT - also with tight Iran bounding box + strike-on-Iran language
+  // Source 2: GDELT - full Middle East theater
   try {
-    const query = encodeURIComponent('"strike on iran" OR "attacked iran" OR "bombed iran" OR "hit iran" OR "struck iran"');
-    const url = `https://api.gdeltproject.org/api/v2/geo/geo?query=${query}&mode=pointdata&format=geojson&timespan=1d&maxpoints=15`;
+    const query = encodeURIComponent('iran OR israel strike OR missile OR attack OR bomb OR rocket');
+    const url = `https://api.gdeltproject.org/api/v2/geo/geo?query=${query}&mode=pointdata&format=geojson&timespan=1d&maxpoints=25`;
     const response = await fetch(url, { timeout: 15000 });
     if (response.ok) {
       const text = await response.text();
@@ -216,16 +273,13 @@ module.exports = async function scrapeStrikes() {
             const lng = coords[0];
             const name = (props.name || '').toLowerCase();
 
-            // Must be inside Iran bounding box
-            if (lat < 25 || lat > 40 || lng < 44 || lng > 63.5) continue;
+            // Must be inside Middle East theater bounding box (Yemen to Turkey, Egypt to Pakistan)
+            if (lat < 12 || lat > 42 || lng < 29 || lng > 63.5) continue;
 
-            // Must contain actual strike language directed at Iran
-            const isStrike = STRIKE_ON_IRAN_PATTERNS.some(p => p.test(props.name || ''));
-            const hasStrikeWords = /struck|bombed|hit|destroyed|damaged|targeted/.test(name);
+            // Must contain strike/military language
+            const isStrike = STRIKE_PATTERNS.some(p => p.test(props.name || ''));
+            const hasStrikeWords = /struck|bombed|hit|destroyed|damaged|targeted|missile|rocket|attack|siren|intercept/.test(name);
             if (!isStrike && !hasStrikeWords) continue;
-
-            // Reject Iran-as-actor
-            if (IRAN_AS_ACTOR_PATTERNS.some(p => p.test(props.name || ''))) continue;
 
             const cityName = findNearestCity(lat, lng);
 
@@ -250,9 +304,10 @@ module.exports = async function scrapeStrikes() {
   const LIVE_PAGES = [
     'https://news.google.com/rss/search?q=iran+strike+location+city+site&hl=en-US&gl=US&ceid=US:en&num=30',
     'https://news.google.com/rss/search?q=%22iran%22+%22struck%22+OR+%22bombed%22+OR+%22hit%22+OR+%22explosion%22&hl=en-US&gl=US&ceid=US:en&num=30',
-    'https://news.google.com/rss/search?q=iran+tehran+isfahan+tabriz+shiraz+strike+OR+attack+OR+hit&hl=en-US&gl=US&ceid=US:en&num=30',
-    'https://news.google.com/rss/search?q=%22strikes+on+iran%22+OR+%22bombing+iran%22+OR+%22iran+under+attack%22&hl=en-US&gl=US&ceid=US:en&num=30',
-    'https://news.google.com/rss/search?q=iran+natanz+OR+fordow+OR+parchin+OR+bushehr+attack+OR+strike+OR+damage&hl=en-US&gl=US&ceid=US:en&num=30',
+    'https://news.google.com/rss/search?q=israel+missile+OR+rocket+OR+attack+tel+aviv+OR+haifa+OR+jerusalem&hl=en-US&gl=US&ceid=US:en&num=30',
+    'https://news.google.com/rss/search?q=%22iron+dome%22+OR+%22red+alert%22+OR+%22sirens%22+israel+attack+OR+missile&hl=en-US&gl=US&ceid=US:en&num=30',
+    'https://news.google.com/rss/search?q=iran+OR+hezbollah+OR+houthi+attack+israel+missile+OR+rocket+OR+drone&hl=en-US&gl=US&ceid=US:en&num=30',
+    'https://news.google.com/rss/search?q=beirut+OR+lebanon+OR+syria+airstrike+OR+strike+OR+attack+OR+explosion&hl=en-US&gl=US&ceid=US:en&num=30',
   ];
 
   try {
@@ -272,15 +327,13 @@ module.exports = async function scrapeStrikes() {
         const text = `${title} ${snippet}`;
         const lower = text.toLowerCase();
 
-        // Look for ANY Iranian city/site mentioned alongside strike/military language
-        const hasStrikeWord = /strike|struck|hit|bomb|attack|airstrike|missile|explosion|blast|destroyed|damaged|target|offensive|sortie|operation|war|raid|intercept|shell|artillery|cruise|bunker|casualties|killed|dead/i.test(text);
+        // Look for theater locations mentioned alongside strike/military language
+        const hasStrikeWord = /strike|struck|hit|bomb|attack|airstrike|missile|explosion|blast|destroyed|damaged|target|offensive|sortie|operation|war|raid|intercept|shell|artillery|cruise|bunker|casualties|killed|dead|rocket|barrage|siren|drone|salvo/i.test(text);
         if (!hasStrikeWord) continue;
 
         // Find all matching locations in this article
         for (const [place, coords] of Object.entries(IRAN_TARGETS)) {
           if (lower.includes(place)) {
-            // Reject Iran-as-actor
-            if (IRAN_AS_ACTOR_PATTERNS.some(p => p.test(text))) break;
 
             let fatalities = 0;
             const fatMatch = lower.match(/(\d+)\s*(?:killed|dead|died|casualties)/);

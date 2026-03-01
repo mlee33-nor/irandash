@@ -126,15 +126,6 @@
         pulseIndicator('dp-strikes');
         updateStrikeCount(data);
         MapModule.updateHeatmap(conflictsData, eventsData, strikesData);
-        // Animate arcs for newly detected strikes
-        newStrikes.forEach(s => {
-          // Guess origin based on target country
-          let originLat = 36.42, originLng = 55.02; // Default: Shahroud (Iran)
-          if (s.name && /iran/i.test(s.name)) {
-            originLat = 31.21; originLng = 34.93; // Nevatim (Israel)
-          }
-          MapModule.showMissileArc(originLat, originLng, s.lat, s.lng, s.name || 'STRIKE');
-        });
         playEscalatedAlert('critical');
         break;
 

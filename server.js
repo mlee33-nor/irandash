@@ -14,8 +14,9 @@ const earthquakeScraper = require('./scrapers/earthquakes');
 const weatherScraper = require('./scrapers/weather');
 const polymarketScraper = require('./scrapers/polymarket');
 
-// Iranian targets for news-based strike detection
+// All theater strike locations (Iran + Israel + Lebanon + Syria + Iraq + Yemen)
 const IRAN_STRIKE_LOCATIONS = {
+  // Iran
   'tehran': { lat: 35.69, lng: 51.39 },
   'isfahan': { lat: 32.65, lng: 51.68 },
   'natanz': { lat: 33.51, lng: 51.73 },
@@ -47,18 +48,87 @@ const IRAN_STRIKE_LOCATIONS = {
   'gorgan': { lat: 36.84, lng: 54.44 },
   'ardabil': { lat: 38.25, lng: 48.30 },
   'zanjan': { lat: 36.67, lng: 48.50 },
+  // Israel - cities
+  'tel aviv': { lat: 32.08, lng: 34.78 },
+  'jerusalem': { lat: 31.77, lng: 35.23 },
+  'haifa': { lat: 32.79, lng: 34.99 },
+  'beer sheva': { lat: 31.25, lng: 34.79 },
+  'be\'er sheva': { lat: 31.25, lng: 34.79 },
+  'beersheba': { lat: 31.25, lng: 34.79 },
+  'ashkelon': { lat: 31.67, lng: 34.57 },
+  'ashdod': { lat: 31.80, lng: 34.65 },
+  'netanya': { lat: 32.33, lng: 34.86 },
+  'herzliya': { lat: 32.16, lng: 34.78 },
+  'rishon': { lat: 31.97, lng: 34.77 },
+  'petah tikva': { lat: 32.09, lng: 34.89 },
+  'rehovot': { lat: 31.89, lng: 34.81 },
+  'eilat': { lat: 29.56, lng: 34.95 },
+  'tiberias': { lat: 32.79, lng: 35.53 },
+  'nazareth': { lat: 32.70, lng: 35.30 },
+  'sderot': { lat: 31.52, lng: 34.60 },
+  'kiryat shmona': { lat: 33.21, lng: 35.57 },
+  'nahariya': { lat: 33.01, lng: 35.10 },
+  'acre': { lat: 32.93, lng: 35.08 },
+  'dimona': { lat: 31.07, lng: 35.03 },
+  'modiin': { lat: 31.90, lng: 35.01 },
+  // Israel - military/strategic
+  'nevatim': { lat: 31.21, lng: 34.93 },
+  'ramon airbase': { lat: 30.78, lng: 34.67 },
+  'ramat david': { lat: 32.67, lng: 35.18 },
+  'hatzerim': { lat: 31.23, lng: 34.66 },
+  'palmachim': { lat: 31.90, lng: 34.69 },
+  'tel nof': { lat: 31.84, lng: 34.82 },
+  'iron dome': { lat: 32.08, lng: 34.78 },
+  'arrow battery': { lat: 32.08, lng: 34.78 },
+  'david\'s sling': { lat: 32.08, lng: 34.78 },
+  'mossad': { lat: 32.15, lng: 34.80 },
+  'kirya': { lat: 32.07, lng: 34.79 },
+  'negev': { lat: 30.85, lng: 34.78 },
+  'golan': { lat: 33.00, lng: 35.75 },
+  'golan heights': { lat: 33.00, lng: 35.75 },
+  'west bank': { lat: 31.95, lng: 35.25 },
+  'gaza': { lat: 31.50, lng: 34.47 },
+  // Lebanon
+  'beirut': { lat: 33.89, lng: 35.50 },
+  'dahiyeh': { lat: 33.85, lng: 35.49 },
+  'baalbek': { lat: 34.01, lng: 36.21 },
+  'sidon': { lat: 33.56, lng: 35.37 },
+  'tyre': { lat: 33.27, lng: 35.20 },
+  'tripoli lebanon': { lat: 34.44, lng: 35.83 },
+  'nabatieh': { lat: 33.38, lng: 35.48 },
+  'bekaa': { lat: 33.85, lng: 35.90 },
+  'south lebanon': { lat: 33.30, lng: 35.40 },
+  // Syria
+  'damascus': { lat: 33.51, lng: 36.29 },
+  'aleppo': { lat: 36.20, lng: 37.17 },
+  'homs': { lat: 34.73, lng: 36.71 },
+  'latakia': { lat: 35.52, lng: 35.79 },
+  'deir ez-zor': { lat: 35.34, lng: 40.14 },
+  'palmyra': { lat: 34.56, lng: 38.28 },
+  't4 airbase': { lat: 34.52, lng: 37.63 },
+  // Iraq
+  'baghdad': { lat: 33.31, lng: 44.37 },
+  'erbil': { lat: 36.19, lng: 44.01 },
+  'al asad': { lat: 33.79, lng: 42.44 },
+  'ain al-asad': { lat: 33.79, lng: 42.44 },
+  'basra': { lat: 30.51, lng: 47.81 },
+  // Yemen / Houthi
+  'sanaa': { lat: 15.37, lng: 44.19 },
+  'hodeidah': { lat: 14.80, lng: 42.95 },
+  'aden': { lat: 12.79, lng: 45.02 },
+  'marib': { lat: 15.46, lng: 45.33 },
 };
 
 // Detect strikes mentioned in news/tweets and add them to strikes data
 function extractStrikesFromNews(articles) {
   const found = [];
-  const strikeWords = /strike|struck|hit|bomb|attack|airstrike|missile|explosion|blast|destroyed|damage|target|offensive|raid|shell|cruise|killed|casualties/i;
-  const iranRef = /iran|iranian/i;
+  const strikeWords = /strike|struck|hit|bomb|attack|airstrike|missile|explosion|blast|destroyed|damage|target|offensive|raid|shell|cruise|killed|casualties|intercept|siren|rocket|barrage|salvo|drone/i;
+  const theaterRef = /iran|iranian|israel|israeli|lebanon|lebanese|hezbollah|houthi|syria|syrian|gaza|iraq|iraqi|yemen/i;
 
   for (const article of articles) {
     const text = `${article.title || ''} ${article.summary || ''}`;
     if (!strikeWords.test(text)) continue;
-    if (!iranRef.test(text)) continue;
+    if (!theaterRef.test(text)) continue;
 
     const lower = text.toLowerCase();
     for (const [place, coords] of Object.entries(IRAN_STRIKE_LOCATIONS)) {

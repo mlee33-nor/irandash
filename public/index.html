@@ -117,10 +117,14 @@
         </div>
       </div>
 
-      <!-- Bottom section - Alerts only -->
+      <!-- Bottom section -->
       <div class="bottom-section" id="bottom-section">
         <div class="bottom-drag-handle" id="bottom-drag-handle">
           <span class="drag-indicator"></span>
+        </div>
+        <div class="bottom-tabs">
+          <button class="btab active" data-btab="alerts">ALERTS &amp; EVENTS</button>
+          <button class="btab" data-btab="theater">LIVE CAMS</button>
         </div>
         <div class="bottom-content">
           <div class="btab-content active" id="btab-alerts">
@@ -134,6 +138,26 @@
                 <span class="stat-value" id="conflicts-count">--</span>
               </div>
               <div class="timeline" id="event-timeline"></div>
+            </div>
+          </div>
+          <div class="btab-content" id="btab-theater">
+            <div class="webcam-grid">
+              <div class="webcam-card">
+                <div class="webcam-label">BEIRUT - LIVE</div>
+                <iframe data-src="https://www.youtube.com/embed/gmtlJ_m2r5A?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+              </div>
+              <div class="webcam-card">
+                <div class="webcam-label">JERUSALEM - LIVE</div>
+                <iframe data-src="https://www.youtube.com/embed/ITAlerjV8Ro?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+              </div>
+              <div class="webcam-card">
+                <div class="webcam-label">AL JAZEERA</div>
+                <iframe data-src="https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+              </div>
+              <div class="webcam-card">
+                <div class="webcam-label">SKY NEWS</div>
+                <iframe data-src="https://www.youtube.com/embed/YDvsBbKfLPA?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+              </div>
             </div>
           </div>
         </div>
@@ -479,6 +503,36 @@
           }
         });
       }
+
+      // Bottom tab switching + lazy load iframes
+      document.querySelectorAll('.btab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Unload iframes from previous tab
+          const prevTab = document.querySelector('.btab-content.active');
+          if (prevTab) {
+            prevTab.querySelectorAll('iframe[src]').forEach(f => {
+              if (f.src && f.src !== '' && f.src !== 'about:blank') {
+                f.dataset.src = f.dataset.src || f.src;
+                f.src = '';
+              }
+            });
+          }
+          document.querySelectorAll('.btab').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.btab-content').forEach(c => c.classList.remove('active'));
+          btn.classList.add('active');
+          const tab = btn.dataset.btab;
+          const panel = document.getElementById('btab-' + tab);
+          if (panel) {
+            panel.classList.add('active');
+            // Lazy load iframes in this tab
+            panel.querySelectorAll('iframe[data-src]').forEach(f => {
+              if (!f.src || f.src === '' || f.src === 'about:blank') {
+                f.src = f.dataset.src;
+              }
+            });
+          }
+        });
+      });
 
       // Keyboard shortcut for page switching: 1-4
       document.addEventListener('keydown', (e) => {
