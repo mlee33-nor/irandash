@@ -132,31 +132,30 @@ function projectNavalFromConflicts(conflicts, news) {
     }
   }
 
-  // Tanker traffic in Gulf (always present - 20% of world oil)
-  const tankerRoutes = [
-    { lat: 26.55, lng: 56.25, area: 'Hormuz Strait' },
-    { lat: 27.5, lng: 52.5, area: 'Central Gulf' },
-    { lat: 29.0, lng: 49.7, area: 'Kharg Island' },
-    { lat: 25.3, lng: 57.0, area: 'Gulf of Oman' },
-    { lat: 13.0, lng: 43.5, area: 'Bab el-Mandeb' },
+  // Hormuz is CLOSED - tankers stuck/rerouted, not transiting
+  // Tankers backed up outside the strait or anchored
+  const stuckTankers = [
+    { lat: 25.0, lng: 57.5, area: 'Gulf of Oman (Waiting)', speed: 0 },
+    { lat: 24.8, lng: 58.0, area: 'Gulf of Oman (Anchored)', speed: 0 },
+    { lat: 25.2, lng: 57.8, area: 'Gulf of Oman (Holding)', speed: 0 },
+    { lat: 28.5, lng: 50.5, area: 'Persian Gulf (Trapped)', speed: 0 },
+    { lat: 29.0, lng: 49.7, area: 'Kharg Island (Loading Halted)', speed: 0 },
+    { lat: 27.0, lng: 52.0, area: 'Central Gulf (Anchored)', speed: 0 },
   ];
 
-  for (const t of tankerRoutes) {
-    const count = 2 + Math.floor(Math.random() * 2);
-    for (let i = 0; i < count; i++) {
-      const flags = ['PA', 'LR', 'MH', 'SA', 'AE', 'IR', 'IN', 'CN', 'GR'];
-      ships.push(makeShip(
-        idx++,
-        `TANKER-${String(Math.floor(Math.random() * 9000) + 1000)}`,
-        'Tanker',
-        flags[Math.floor(Math.random() * flags.length)],
-        t.lat + (Math.random() - 0.5) * 0.5,
-        t.lng + (Math.random() - 0.5) * 0.5,
-        8 + Math.random() * 6,
-        t.area,
-        'VLCC'
-      ));
-    }
+  for (const t of stuckTankers) {
+    const flags = ['PA', 'LR', 'MH', 'SA', 'AE', 'IN', 'CN', 'GR'];
+    ships.push(makeShip(
+      idx++,
+      `TANKER-${String(Math.floor(Math.random() * 9000) + 1000)}`,
+      'Tanker',
+      flags[Math.floor(Math.random() * flags.length)],
+      t.lat + (Math.random() - 0.5) * 0.3,
+      t.lng + (Math.random() - 0.5) * 0.3,
+      t.speed,
+      t.area,
+      'VLCC'
+    ));
   }
 
   console.log(`[ships] Projected ${ships.length} vessels from conflict data`);

@@ -1,8 +1,9 @@
 const RSSParser = require('rss-parser');
+const fetch = require('node-fetch');
 const parser = new RSSParser();
 
-// Known Iran locations for mapping strikes
-const IRAN_LOCATIONS = {
+// Only specific Iranian military/nuclear sites and cities - NO generic "iran" entry
+const IRAN_TARGETS = {
   'tehran': { lat: 35.69, lng: 51.39 },
   'isfahan': { lat: 32.65, lng: 51.68 },
   'natanz': { lat: 33.51, lng: 51.73 },
@@ -10,47 +11,55 @@ const IRAN_LOCATIONS = {
   'bushehr': { lat: 28.97, lng: 50.84 },
   'shiraz': { lat: 29.59, lng: 52.58 },
   'tabriz': { lat: 38.08, lng: 46.29 },
-  'mashhad': { lat: 36.30, lng: 59.60 },
   'parchin': { lat: 35.52, lng: 51.77 },
   'khojir': { lat: 35.58, lng: 51.66 },
   'shahroud': { lat: 36.42, lng: 55.02 },
   'bandar abbas': { lat: 27.19, lng: 56.28 },
-  'chabahar': { lat: 25.30, lng: 60.63 },
   'dezful': { lat: 32.43, lng: 48.38 },
   'ahvaz': { lat: 31.32, lng: 48.67 },
   'kermanshah': { lat: 34.31, lng: 47.06 },
-  'qom': { lat: 34.64, lng: 50.88 },
-  'arak': { lat: 34.09, lng: 49.69 },
-  'semnan': { lat: 35.57, lng: 53.40 },
-  'abadan': { lat: 30.34, lng: 48.30 },
-  'iran': { lat: 32.43, lng: 53.69 },
-  'khorramabad': { lat: 33.49, lng: 48.35 },
   'ilam': { lat: 33.64, lng: 46.42 },
   'hamadan': { lat: 34.80, lng: 48.51 },
-  'zanjan': { lat: 36.67, lng: 48.48 },
-  'rasht': { lat: 37.28, lng: 49.58 },
+  'arak': { lat: 34.09, lng: 49.69 },
+  'mashhad': { lat: 36.30, lng: 59.60 },
+  'qom': { lat: 34.64, lng: 50.88 },
+  'chabahar': { lat: 25.30, lng: 60.63 },
+  'semnan': { lat: 35.57, lng: 53.40 },
+  'abadan': { lat: 30.34, lng: 48.30 },
   'kerman': { lat: 30.28, lng: 57.08 },
-  'yazd': { lat: 31.90, lng: 54.37 },
-  'birjand': { lat: 32.87, lng: 59.22 },
-  'zahedan': { lat: 29.50, lng: 60.86 },
-  'sistan': { lat: 27.50, lng: 62.00 },
-  'khuzestan': { lat: 31.32, lng: 48.67 },
 };
 
-const STRIKE_KEYWORDS = /\b(strike|struck|hit|bomb|attack|missile|drone|raid|target|destroy|blast|explosi)\w*\b/i;
-const IRAN_KEYWORDS = /\b(iran|iranian|tehran|isfahan|natanz|fordow|bushehr|parchin|khojir|irgc|revolutionary guard)\b/i;
-const CONFIRM_KEYWORDS = /\b(confirm|report|kill|dead|died|death|casualt|destroy|damage|struck|hit|target)\w*\b/i;
+// These phrases indicate an actual strike ON Iran, not Iran doing something
+const STRIKE_ON_IRAN_PATTERNS = [
+  /(?:strike|struck|hit|bomb|attack|target|raid)\w*\s+(?:on|in|inside|within|against|near)\s+iran/i,
+  /iran\w*\s+(?:struck|hit|bombed|attacked|targeted|raided)/i,
+  /(?:israel|idf|us|american|coalition)\s+(?:strike|attack|bomb|hit|raid)\w*\s+(?:iran|tehran|isfahan|natanz|parchin|fordow)/i,
+  /(?:explosion|blast|damage)\w*\s+(?:in|at|near)\s+(?:iran|tehran|isfahan|natanz|parchin|fordow|bushehr|tabriz)/i,
+  /(?:strike|attack|bomb)\w*\s+(?:iran\w*\s+)?(?:military|nuclear|missile|air defense|radar|base|facility|site)/i,
+  /(?:iran|iranian)\s+(?:site|base|facility|installation)\s+(?:struck|hit|destroyed|damaged|targeted)/i,
+];
+
+// These phrases mean Iran is the ACTOR not the TARGET - reject these
+const IRAN_AS_ACTOR_PATTERNS = [
+  /iran\w*\s+(?:attack|strike|bomb|launch|fire|hit)\w*\s+(?:israel|us|base|ship|force)/i,
+  /iran\w*\s+(?:threat|warn|vow|promise|retaliat)/i,
+  /iran\w*\s+(?:sanction|nuclear deal|negotiat|diplomac)/i,
+  /iran\w*\s+(?:proxy|militia|support|fund|back)/i,
+  /(?:houthi|hezbollah|hamas)\s+(?:attack|strike|launch)/i,
+];
 
 const FEEDS = [
   'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml',
   'https://www.aljazeera.com/xml/rss/all.xml',
   'https://feeds.washingtonpost.com/rss/world',
   'https://rss.app/feeds/v1.1/tFnGReFbiVMuYN3q.xml',
+  'https://news.google.com/rss/search?q=%22strike+on+iran%22+OR+%22attacked+iran%22+OR+%22bombed+iran%22&hl=en-US&gl=US&ceid=US:en',
 ];
 
 module.exports = async function scrapeStrikes() {
   const strikes = [];
 
+  // Source 1: RSS feeds with tight filtering
   const results = await Promise.allSettled(
     FEEDS.map(url => parser.parseURL(url).catch(() => ({ items: [] })))
   );
@@ -59,64 +68,57 @@ module.exports = async function scrapeStrikes() {
     if (result.status !== 'fulfilled') continue;
     const items = result.value.items || [];
 
-    for (const item of items.slice(0, 20)) {
-      const text = `${item.title || ''} ${item.contentSnippet || item.content || ''}`;
+    for (const item of items.slice(0, 25)) {
+      const title = item.title || '';
+      const snippet = item.contentSnippet || item.content || '';
+      const text = `${title} ${snippet}`;
       const lower = text.toLowerCase();
 
-      // Must mention Iran AND a strike/attack AND confirmation
-      if (!IRAN_KEYWORDS.test(lower)) continue;
-      if (!STRIKE_KEYWORDS.test(lower)) continue;
-      if (!CONFIRM_KEYWORDS.test(lower)) continue;
+      // Must match at least one "strike ON Iran" pattern
+      const isStrikeOnIran = STRIKE_ON_IRAN_PATTERNS.some(p => p.test(text));
+      if (!isStrikeOnIran) continue;
 
-      // Find the most specific location mentioned
+      // Reject if Iran is the one doing the attacking
+      const iranIsActor = IRAN_AS_ACTOR_PATTERNS.some(p => p.test(text));
+      if (iranIsActor) continue;
+
+      // Find specific location - must be a real Iranian site, not generic
       let bestLoc = null;
       let bestName = '';
-      for (const [place, coords] of Object.entries(IRAN_LOCATIONS)) {
-        if (lower.includes(place) && place !== 'iran') {
+      for (const [place, coords] of Object.entries(IRAN_TARGETS)) {
+        if (lower.includes(place)) {
           bestLoc = coords;
           bestName = place.charAt(0).toUpperCase() + place.slice(1);
-          break;
+          break; // take first (most specific) match
         }
       }
 
-      // Fallback to generic Iran if specific location not found
-      if (!bestLoc && IRAN_KEYWORDS.test(lower)) {
-        // Try to find any Iran city mentioned
-        for (const [place, coords] of Object.entries(IRAN_LOCATIONS)) {
-          if (lower.includes(place)) {
-            bestLoc = coords;
-            bestName = place.charAt(0).toUpperCase() + place.slice(1);
-            break;
-          }
-        }
-      }
-
+      // If no specific location found but article clearly says "strike on Iran"
+      // skip it - we don't want a random dot in the middle of the country
       if (!bestLoc) continue;
 
-      // Extract fatality count if mentioned
       let fatalities = 0;
       const fatMatch = lower.match(/(\d+)\s*(?:killed|dead|died|casualties)/);
-      if (fatMatch) fatalities = parseInt(fatMatch[1]);
+      if (fatMatch) fatalities = Math.min(parseInt(fatMatch[1]), 9999);
 
       strikes.push({
-        id: `strike-${Buffer.from(item.link || item.title || '').toString('base64').slice(0, 16)}`,
+        id: `strike-${Buffer.from(item.link || title).toString('base64').slice(0, 16)}`,
         name: bestName,
-        lat: bestLoc.lat + (Math.random() - 0.5) * 0.05,
-        lng: bestLoc.lng + (Math.random() - 0.5) * 0.05,
+        lat: bestLoc.lat + (Math.random() - 0.5) * 0.03,
+        lng: bestLoc.lng + (Math.random() - 0.5) * 0.03,
         date: item.isoDate ? item.isoDate.split('T')[0] : new Date().toISOString().split('T')[0],
-        desc: text.slice(0, 300),
+        desc: title.slice(0, 300),
         source: item.link || 'RSS',
-        title: item.title || '',
+        title: title,
         fatalities
       });
     }
   }
 
-  // Also check GDELT for Iran strike reports
+  // Source 2: GDELT - also with tight Iran bounding box + strike-on-Iran language
   try {
-    const fetch = require('node-fetch');
-    const query = encodeURIComponent('iran strike OR attack OR bomb OR missile OR killed OR destroyed');
-    const url = `https://api.gdeltproject.org/api/v2/geo/geo?query=${query}&mode=pointdata&format=geojson&timespan=7d&maxpoints=20`;
+    const query = encodeURIComponent('"strike on iran" OR "attacked iran" OR "bombed iran" OR "hit iran" OR "struck iran"');
+    const url = `https://api.gdeltproject.org/api/v2/geo/geo?query=${query}&mode=pointdata&format=geojson&timespan=7d&maxpoints=15`;
     const response = await fetch(url, { timeout: 15000 });
     if (response.ok) {
       const text = await response.text();
@@ -128,21 +130,30 @@ module.exports = async function scrapeStrikes() {
             const coords = f.geometry?.coordinates || [0, 0];
             const lat = coords[1];
             const lng = coords[0];
-            const name = props.name || '';
+            const name = (props.name || '').toLowerCase();
 
-            // Check if this is in Iran (rough bounding box)
+            // Must be inside Iran bounding box
             if (lat < 25 || lat > 40 || lng < 44 || lng > 63.5) continue;
-            if (!/strike|attack|bomb|kill|destroy|missile|hit/i.test(name)) continue;
+
+            // Must contain actual strike language directed at Iran
+            const isStrike = STRIKE_ON_IRAN_PATTERNS.some(p => p.test(props.name || ''));
+            const hasStrikeWords = /struck|bombed|hit|destroyed|damaged|targeted/.test(name);
+            if (!isStrike && !hasStrikeWords) continue;
+
+            // Reject Iran-as-actor
+            if (IRAN_AS_ACTOR_PATTERNS.some(p => p.test(props.name || ''))) continue;
+
+            const cityName = findNearestCity(lat, lng);
 
             strikes.push({
-              id: `gdelt-strike-${props.urlpubtimeseq || Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-              name: findNearestCity(lat, lng),
+              id: `gdelt-strike-${props.urlpubtimeseq || Date.now()}`,
+              name: cityName,
               lat,
               lng,
               date: props.dateadded ? formatGdeltDate(props.dateadded) : new Date().toISOString().split('T')[0],
-              desc: name.slice(0, 300),
+              desc: (props.name || '').slice(0, 300),
               source: props.url || 'GDELT',
-              title: name,
+              title: (props.name || '').slice(0, 200),
               fatalities: 0
             });
           }
@@ -151,7 +162,7 @@ module.exports = async function scrapeStrikes() {
     }
   } catch (e) {}
 
-  // Deduplicate by proximity
+  // Deduplicate by proximity + date
   const deduped = [];
   const seen = new Set();
   for (const s of strikes) {
@@ -162,14 +173,14 @@ module.exports = async function scrapeStrikes() {
     }
   }
 
+  console.log(`[strikes] ${deduped.length} confirmed strikes on Iran detected`);
   return deduped;
 };
 
 function findNearestCity(lat, lng) {
-  let nearest = 'Iran';
+  let nearest = 'Unknown Site';
   let minDist = Infinity;
-  for (const [place, coords] of Object.entries(IRAN_LOCATIONS)) {
-    if (place === 'iran') continue;
+  for (const [place, coords] of Object.entries(IRAN_TARGETS)) {
     const d = Math.sqrt((lat - coords.lat) ** 2 + (lng - coords.lng) ** 2);
     if (d < minDist) {
       minDist = d;
