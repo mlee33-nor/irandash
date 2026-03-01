@@ -72,8 +72,8 @@ async function runScraper(name, scraperFn, intervalMs) {
 // Start all scrapers
 function startScrapers() {
   runScraper('news', newsScraper, 2 * 60 * 1000);       // 2 min
-  runScraper('aircraft', aircraftScraper, 15 * 1000);     // 15 sec
-  runScraper('ships', shipsScraper, 60 * 1000);            // 60 sec
+  runScraper('aircraft', () => aircraftScraper(latestData.conflicts, latestData.news), 15 * 1000);     // 15 sec
+  runScraper('ships', () => shipsScraper(latestData.conflicts, latestData.news), 60 * 1000);            // 60 sec
   runScraper('events', gdeltScraper, 15 * 60 * 1000);     // 15 min
   runScraper('conflicts', conflictsScraper, 2 * 60 * 1000); // 2 min
   runScraper('strikes', strikesScraper, 10 * 60 * 1000);    // 10 min

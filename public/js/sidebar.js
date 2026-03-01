@@ -17,9 +17,10 @@ const SidebarModule = (function () {
     data.slice(0, 12).forEach(a => {
       const div = document.createElement('div');
       div.className = 'list-item';
+      const milTag = a.military ? ' [MIL]' : '';
       div.innerHTML = `
-        <span class="callsign">${escapeHtml(a.callsign) || a.icao24}</span>
-        <span class="detail">${escapeHtml(a.country)} | ${a.altitude ? Math.round(a.altitude / 100) + '00ft' : 'GND'}</span>
+        <span class="callsign">${escapeHtml(a.callsign) || a.icao24}${milTag}</span>
+        <span class="detail">${escapeHtml(a.country)} | ${a.altitude ? Math.round(a.altitude / 100) + '00ft' : 'GND'}${a.role ? ' | ' + escapeHtml(a.role) : ''}</span>
       `;
       listEl.appendChild(div);
     });
@@ -40,8 +41,8 @@ const SidebarModule = (function () {
       const div = document.createElement('div');
       div.className = 'list-item';
       div.innerHTML = `
-        <span class="callsign">${escapeHtml(s.name)}</span>
-        <span class="detail">${escapeHtml(s.type)} | ${s.speed}kts</span>
+        <span class="callsign">${escapeHtml(s.name)}${s.flag ? ' [' + escapeHtml(s.flag) + ']' : ''}</span>
+        <span class="detail">${escapeHtml(s.type)} | ${s.speed}kts${s.role ? ' | ' + escapeHtml(s.role) : ''}</span>
       `;
       listEl.appendChild(div);
     });
