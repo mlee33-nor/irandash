@@ -90,6 +90,8 @@ const MapModule = (function () {
 
     drawRegionOutlines();
     drawNavalBases();
+    drawMissileRanges();
+    drawStrategicZones();
 
     // HUD: Update coordinates readout on mouse move
     const coordsEl = document.getElementById('coords-readout');
@@ -220,6 +222,119 @@ const MapModule = (function () {
       });
       L.marker([loc.lat, loc.lng], { icon }).addTo(map);
     });
+  }
+
+  // Missile range rings - shows approximate reach from key sites
+  function drawMissileRanges() {
+    // Iran missile range from central Iran (Shahroud)
+    L.circle([36.42, 55.02], {
+      radius: 2000000, // ~2000km - Shahab-3/Emad range
+      color: 'rgba(255, 50, 50, 0.12)',
+      fillColor: 'rgba(255, 50, 50, 0.03)',
+      fillOpacity: 1,
+      weight: 1,
+      dashArray: '8 6',
+      interactive: false
+    }).addTo(map);
+
+    // Israel Iron Dome / Arrow coverage from central Israel
+    L.circle([31.77, 35.22], {
+      radius: 400000, // ~400km Arrow-3 range
+      color: 'rgba(59, 130, 246, 0.12)',
+      fillColor: 'rgba(59, 130, 246, 0.02)',
+      fillOpacity: 1,
+      weight: 1,
+      dashArray: '6 4',
+      interactive: false
+    }).addTo(map);
+
+    // US 5th Fleet range from Bahrain
+    L.circle([26.23, 50.55], {
+      radius: 800000,
+      color: 'rgba(255, 255, 255, 0.06)',
+      fillColor: 'rgba(255, 255, 255, 0.01)',
+      fillOpacity: 1,
+      weight: 1,
+      dashArray: '4 8',
+      interactive: false
+    }).addTo(map);
+
+    // Range labels
+    const rangeLabelStyle = 'color:rgba(255,255,255,0.15);font-size:8px;letter-spacing:2px;font-family:Share Tech Mono,monospace;white-space:nowrap';
+    [
+      { lat: 38.5, lng: 45.5, text: 'SHAHAB-3 RANGE ~2000KM' },
+      { lat: 30.0, lng: 36.8, text: 'ARROW-3 ~400KM' },
+      { lat: 28.5, lng: 54.0, text: '5TH FLEET AOR' },
+    ].forEach(r => {
+      L.marker([r.lat, r.lng], {
+        icon: L.divIcon({
+          className: '',
+          html: `<div style="${rangeLabelStyle}">${r.text}</div>`,
+          iconSize: [0, 0]
+        }),
+        interactive: false
+      }).addTo(map);
+    });
+  }
+
+  // Strategic zone shading
+  function drawStrategicZones() {
+    // Strait of Hormuz chokepoint highlight
+    L.polygon([
+      [26.9, 56.0], [26.1, 56.5], [25.8, 56.8], [26.0, 57.2],
+      [26.7, 56.8], [27.1, 56.3], [26.9, 56.0]
+    ], {
+      color: 'rgba(255, 170, 0, 0.25)',
+      fillColor: 'rgba(255, 170, 0, 0.06)',
+      fillOpacity: 1,
+      weight: 1,
+      dashArray: '3 3',
+      interactive: false
+    }).addTo(map);
+
+    L.marker([26.4, 56.4], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="color:rgba(255,170,0,0.3);font-size:7px;letter-spacing:2px;font-family:Share Tech Mono,monospace;white-space:nowrap">HORMUZ CHOKEPOINT</div>',
+        iconSize: [0, 0]
+      }),
+      interactive: false
+    }).addTo(map);
+
+    // Persian Gulf zone
+    L.marker([27.5, 51.5], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="color:rgba(59,130,246,0.15);font-size:9px;letter-spacing:4px;font-family:Share Tech Mono,monospace;white-space:nowrap">PERSIAN GULF</div>',
+        iconSize: [0, 0]
+      }),
+      interactive: false
+    }).addTo(map);
+
+    // Red Sea label
+    L.marker([20.0, 38.5], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="color:rgba(239,68,68,0.15);font-size:9px;letter-spacing:4px;font-family:Share Tech Mono,monospace;white-space:nowrap">RED SEA</div>',
+        iconSize: [0, 0]
+      }),
+      interactive: false
+    }).addTo(map);
+
+    // Mediterranean label
+    L.marker([34.0, 32.0], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="color:rgba(59,130,246,0.12);font-size:8px;letter-spacing:3px;font-family:Share Tech Mono,monospace;white-space:nowrap">MEDITERRANEAN</div>',
+        iconSize: [0, 0]
+      }),
+      interactive: false
+    }).addTo(map);
+
+    // Crosshair at map center (Tehran area)
+    const crossStyle = 'rgba(0, 255, 65, 0.08)';
+    L.polyline([[25, 51.39], [40, 51.39]], { color: crossStyle, weight: 1, dashArray: '2 6', interactive: false }).addTo(map);
+    L.polyline([[35.69, 44], [35.69, 63]], { color: crossStyle, weight: 1, dashArray: '2 6', interactive: false }).addTo(map);
   }
 
   function updateAircraft(data) {

@@ -90,6 +90,7 @@
       case 'strikes':
         MapModule.updateDynamicStrikes(data);
         pulseIndicator('dp-strikes');
+        updateStrikeCount(data);
         break;
     }
   }
@@ -131,6 +132,23 @@
       el.className = 'threat-level-value high';
     }
   }
+
+  // HUD: Update strike counter
+  function updateStrikeCount(data) {
+    const el = document.getElementById('strike-count');
+    if (el) el.textContent = data.length;
+  }
+
+  // Zulu clock
+  function startZuluClock() {
+    const el = document.getElementById('zulu-clock');
+    if (!el) return;
+    setInterval(() => {
+      const now = new Date();
+      el.textContent = now.toISOString().slice(11, 19) + 'Z';
+    }, 1000);
+  }
+  startZuluClock();
 
   function setStatus(state) {
     const el = document.getElementById('ws-status');
