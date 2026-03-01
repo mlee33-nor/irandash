@@ -99,6 +99,12 @@ module.exports = async function scrapeNews() {
     const { source, items } = result.value;
 
     for (const item of items.slice(0, 20)) {
+      // Skip articles older than 12 hours
+      if (item.isoDate) {
+        const age = Date.now() - new Date(item.isoDate).getTime();
+        if (age > 12 * 60 * 60 * 1000) continue;
+      }
+
       const text = `${item.title || ''} ${item.contentSnippet || item.content || ''}`.toLowerCase();
       const matches = KEYWORDS.some(kw => text.includes(kw));
       if (!matches) continue;
