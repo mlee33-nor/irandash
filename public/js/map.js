@@ -91,6 +91,14 @@ const MapModule = (function () {
     drawRegionOutlines();
     drawNavalBases();
 
+    // HUD: Update coordinates readout on mouse move
+    const coordsEl = document.getElementById('coords-readout');
+    if (coordsEl) {
+      map.on('mousemove', (e) => {
+        coordsEl.textContent = `LAT ${e.latlng.lat.toFixed(4)} | LNG ${e.latlng.lng.toFixed(4)}`;
+      });
+    }
+
     // Layer toggle buttons
     document.querySelectorAll('.ctrl-btn[data-layer]').forEach(btn => {
       btn.addEventListener('click', () => {

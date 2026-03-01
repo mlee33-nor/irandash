@@ -39,6 +39,243 @@ html, body {
 /* Scanline overlay disabled for performance */
 .scanlines { display: none; }
 
+/* === JARVIS HUD ELEMENTS === */
+
+/* Threat level bar */
+.threat-bar {
+  position: fixed;
+  top: 42px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 200;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--accent-red) 20%,
+    var(--accent-amber) 50%,
+    var(--accent-red) 80%,
+    transparent 100%
+  );
+  opacity: 0.7;
+  animation: threatSweep 4s ease-in-out infinite;
+}
+
+@keyframes threatSweep {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.9; }
+}
+
+/* Alert ticker */
+.alert-ticker {
+  position: fixed;
+  top: 44px;
+  left: 0;
+  right: 0;
+  height: 22px;
+  background: rgba(239, 68, 68, 0.06);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.15);
+  z-index: 150;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.ticker-track {
+  display: flex;
+  white-space: nowrap;
+  animation: tickerScroll 60s linear infinite;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--accent-red);
+  opacity: 0.85;
+}
+
+.ticker-track span {
+  padding: 0 40px;
+}
+
+.ticker-track .ticker-sep {
+  color: rgba(239, 68, 68, 0.3);
+  padding: 0 15px;
+}
+
+@keyframes tickerScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* HUD corner brackets on panels */
+.panel::before,
+.panel::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.panel::before {
+  top: 0;
+  left: 0;
+  border-top: 1px solid rgba(59, 130, 246, 0.3);
+  border-left: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.panel::after {
+  bottom: 0;
+  right: 0;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+  border-right: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.panel {
+  position: relative;
+}
+
+/* Glowing active border on severity-critical items */
+.severity-critical {
+  background: rgba(239, 68, 68, 0.04);
+  border-left: 3px solid var(--accent-red);
+  box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.03);
+}
+
+/* Status indicators with pulse */
+.ws-status.connected::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--accent-green);
+  border-radius: 50%;
+  margin-right: 4px;
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 0 2px var(--accent-green); }
+  50% { box-shadow: 0 0 8px var(--accent-green), 0 0 16px rgba(16, 185, 129, 0.3); }
+}
+
+/* Grid coords overlay on map (subtle) */
+.map-panel::after {
+  border: none;
+}
+
+/* HUD data readout style for panel headers */
+.panel-header {
+  position: relative;
+}
+
+.panel-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent);
+}
+
+/* Threat level indicator widget */
+.threat-level {
+  position: fixed;
+  top: 70px;
+  left: 12px;
+  z-index: 200;
+  background: rgba(12, 15, 22, 0.92);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-family: 'Share Tech Mono', monospace;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.threat-level-label {
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+
+.threat-level-value {
+  font-size: 13px;
+  letter-spacing: 3px;
+  font-weight: 700;
+}
+
+.threat-level-value.critical {
+  color: var(--accent-red);
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+}
+
+.threat-level-value.high {
+  color: var(--accent-amber);
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+/* Coordinates readout */
+.coords-readout {
+  position: fixed;
+  bottom: 228px;
+  left: 12px;
+  z-index: 200;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  background: rgba(12, 15, 22, 0.85);
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+/* Uptime / data refresh indicator */
+.data-pulse {
+  position: fixed;
+  top: 70px;
+  right: 12px;
+  z-index: 200;
+  background: rgba(12, 15, 22, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-family: 'Share Tech Mono', monospace;
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.data-pulse-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.data-pulse-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  flex-shrink: 0;
+}
+
+.data-pulse-dot.active {
+  animation: dataBlink 1.5s ease-in-out infinite;
+}
+
+@keyframes dataBlink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; box-shadow: 0 0 4px var(--accent-green); }
+}
+
 /* ===== TOP BAR ===== */
 .top-bar {
   display: flex;
@@ -116,7 +353,8 @@ html, body {
   display: grid;
   grid-template-columns: 1fr 1fr 340px;
   grid-template-rows: 1fr 220px;
-  height: calc(100vh - 42px);
+  height: calc(100vh - 64px);
+  margin-top: 22px;
   gap: 1px;
   background: rgba(255, 255, 255, 0.03);
 }

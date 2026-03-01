@@ -55,16 +55,22 @@
       case 'news':
         NewsModule.update(data);
         MapModule.updateNewsMarkers(data);
+        pulseIndicator('dp-news');
+        if (data.some(a => a.source && a.source.startsWith('X/'))) pulseIndicator('dp-osint');
+        updateTicker(data);
+        updateThreatLevel(data);
         break;
 
       case 'aircraft':
         MapModule.updateAircraft(data);
         SidebarModule.updateAircraftStats(data);
+        pulseIndicator('dp-air');
         break;
 
       case 'ships':
         MapModule.updateShips(data);
         SidebarModule.updateShipStats(data);
+        pulseIndicator('dp-sea');
         break;
 
       case 'events':
@@ -83,7 +89,46 @@
 
       case 'strikes':
         MapModule.updateDynamicStrikes(data);
+        pulseIndicator('dp-strikes');
         break;
+    }
+  }
+
+  // HUD: Pulse a data indicator dot
+  function pulseIndicator(id) {
+    const dot = document.getElementById(id);
+    if (!dot) return;
+    dot.classList.add('active');
+    setTimeout(() => dot.classList.remove('active'), 3000);
+  }
+
+  // HUD: Update ticker with latest critical/high headlines
+  function updateTicker(articles) {
+    const track = document.getElementById('ticker-track');
+    if (!track) return;
+    const critical = articles.filter(a => a.severity === 'critical' || a.severity === 'high').slice(0, 10);
+    if (critical.length === 0) return;
+    const items = critical.map(a => `\u26A0 ${(a.title || '').slice(0, 120).toUpperCase()}`);
+    // Duplicate for seamless scroll
+    const html = items.map(t => `<span>${t}</span><span class="ticker-sep">\u2502</span>`).join('');
+    track.innerHTML = html + html;
+  }
+
+  // HUD: Update threat level based on severity distribution
+  function updateThreatLevel(articles) {
+    const el = document.getElementById('threat-level');
+    if (!el) return;
+    const critCount = articles.filter(a => a.severity === 'critical').length;
+    const highCount = articles.filter(a => a.severity === 'high').length;
+    if (critCount >= 3) {
+      el.textContent = 'CRITICAL';
+      el.className = 'threat-level-value critical';
+    } else if (critCount >= 1 || highCount >= 3) {
+      el.textContent = 'HIGH';
+      el.className = 'threat-level-value high';
+    } else {
+      el.textContent = 'ELEVATED';
+      el.className = 'threat-level-value high';
     }
   }
 
