@@ -22,7 +22,6 @@
   initKeyboardShortcuts();
   initSitrep();
   initAmbientAudio();
-  initSigintFeed();
   initAlertSounds();
 
   function connectWebSocket() {
@@ -588,61 +587,7 @@
     }).join('');
   }
 
-  // === SIGINT COMMS INTERCEPT FEED ===
-  function initSigintFeed() {
-    const feed = document.getElementById('sigint-feed');
-    if (!feed) return;
-
-    const bands = ['HF 3.5MHz', 'VHF 118.0MHz', 'UHF 243.0MHz', 'UHF 340.2MHz', 'HF 6.7MHz', 'VHF 156.8MHz', 'UHF 225.0MHz', 'HF 8.9MHz'];
-    const callsigns = ['DARKSTAR', 'VIPER-6', 'SABRE ACTUAL', 'EAGLE-3', 'OVERLORD', 'WARHOUND', 'SHADOW-9', 'THUNDER-1', 'GUARDIAN', 'RAPTOR-5', 'ANVIL', 'REAPER-2'];
-    const prefixes = ['//FLASH//', '//ROUTINE//', '//PRIORITY//', '//IMMEDIATE//'];
-    const contents = [
-      'FREQ CHANGE AUTH... SWITCHING TO ALT COMMS',
-      'CONTACT BEARING 045 RANGE 120NM ANGELS 35',
-      'AUTHENTICATE ALPHA BRAVO... CONFIRMED',
-      'RTB ORDERED... BINGO FUEL STATE',
-      'EYES ON TARGET... AWAITING ROE CLEARANCE',
-      'JAMMING DETECTED BAND 3... COUNTERMEASURES ACTIVE',
-      'MOVEMENT GRID 38TQM... 3X VEHICLES SOUTHBOUND',
-      'CROSSING ADIZ... SQUAWK CHANGE 7700',
-      'PACKAGE INBOUND... ETA 15 MIKES',
-      'SPLASH ONE... TARGET NEUTRALIZED',
-      'COMMS CHECK... ALL STATIONS REPORT',
-      'INTEL SUGGESTS ACTIVITY AT KNOWN SITE...',
-      'SCRAMBLE ALERT... CONDITION RED',
-      'MISSION ABORT CODE RECEIVED... RTB',
-      'RADAR CONTACT LOST... LAST KNOWN POS...',
-      'SAR ACTIVATED... SEARCH SECTOR DELTA',
-      'HOSTILE EMITTERS DETECTED... BEARING 270',
-      'CLASSIFIED TRAFFIC... ENCRYPTING...',
-    ];
-
-    function genHexBlock(len) {
-      return Array.from({ length: len }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase()).join(' ');
-    }
-
-    function addIntercept() {
-      const band = bands[Math.floor(Math.random() * bands.length)];
-      const call = callsigns[Math.floor(Math.random() * callsigns.length)];
-      const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-      const content = contents[Math.floor(Math.random() * contents.length)];
-      const encrypted = Math.random() > 0.6;
-      const now = new Date();
-      const ts = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'UTC' });
-
-      const div = document.createElement('div');
-      div.className = 'sigint-entry' + (prefix === '//FLASH//' ? ' sigint-flash' : '');
-      div.innerHTML = `<span class="sigint-ts">${ts}Z</span> <span class="sigint-band">[${band}]</span> <span class="sigint-call">${call}</span> ${prefix} ${encrypted ? `<span class="sigint-encrypted">[ENCRYPTED] ${genHexBlock(8)}</span>` : `<span class="sigint-clear">${content}</span>`}`;
-
-      feed.insertBefore(div, feed.firstChild);
-      if (feed.children.length > 50) feed.removeChild(feed.lastChild);
-    }
-
-    // Seed initial entries
-    for (let i = 0; i < 8; i++) addIntercept();
-    // Add new intercepts at random intervals
-    setInterval(addIntercept, 4000 + Math.random() * 6000);
-  }
+  // SIGINT panel removed - was simulated data
 
   // === ALERT SOUND ESCALATION ===
   let alertSoundsReady = false;

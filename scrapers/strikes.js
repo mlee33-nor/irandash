@@ -152,18 +152,37 @@ const IRAN_TARGETS = {
   'marib': { lat: 15.46, lng: 45.33, type: 'city' },
 };
 
-// Patterns indicating actual strikes/attacks in the theater (any direction)
-const STRIKE_PATTERNS = [
-  /(?:strike|struck|hit|bomb|attack|target|raid|missile|rocket|barrage|salvo)\w*\s+(?:on|in|inside|within|against|near)\s+(?:iran|israel|lebanon|syria|iraq|yemen|gaza)/i,
-  /(?:iran|israel|lebanon|beirut|damascus|tel aviv|jerusalem|haifa|gaza)\w*\s+(?:struck|hit|bombed|attacked|targeted|raided|shelled)/i,
-  /(?:explosion|blast|damage|destroyed|crater|impact|siren)\w*\s+(?:in|at|near|reported|heard)\s+(?:iran|israel|lebanon|syria|iraq|tehran|isfahan|tel aviv|jerusalem|haifa|beirut|damascus|gaza|baghdad|sanaa)/i,
-  /(?:strike|attack|bomb|airstrike|missile|rocket|drone)\w*\s+(?:military|nuclear|missile|air defense|radar|base|facility|site|installation|command|center|bunker|port|airbase|city)/i,
-  /(?:preemptive|retaliatory|massive|precision|ballistic|cruise)\s+(?:strike|attack|bombing|operation|missile)\s+(?:on|against|in|inside|toward|at)\s+(?:iran|israel|lebanon|syria)/i,
-  /(?:under\s+(?:attack|fire|bombardment)|being\s+(?:bombed|struck|attacked|shelled))/i,
-  /(?:iron dome|arrow|david.s sling|thaad)\s+(?:intercept|activat|engag|fire)/i,
-  /(?:missile|rocket|drone|uav)\s+(?:hit|struck|landed|impacted|intercepted)\s+(?:in|near|at|over)\s+(?:israel|tel aviv|jerusalem|haifa|negev|golan|eilat|ashkelon|ashdod|beer sheva|sderot)/i,
-  /(?:houthi|hezbollah|irgc|iran)\w*\s+(?:launch|fire|send|attack)\w*\s+(?:missile|rocket|drone|barrage|salvo)\w*\s+(?:at|on|toward|into|against)\s+(?:israel|tel aviv|haifa|eilat)/i,
-  /(?:sirens?|red alert|code red)\s+(?:in|across|throughout)\s+(?:israel|tel aviv|jerusalem|haifa|north|south|central)/i,
+// Patterns indicating CONFIRMED actual strikes (past tense, reporting events that happened)
+const CONFIRMED_STRIKE_PATTERNS = [
+  /(?:struck|hit|bombed|attacked|shelled|destroyed|damaged)\s+(?:in|at|near)\s+/i,
+  /explosion\w*\s+(?:reported|heard|in|at|near|rocked|shook)/i,
+  /(?:sirens?|red alert)\s+(?:sound|heard|activated|blaring)\s+(?:in|across)/i,
+  /(?:iron dome|arrow|thaad)\s+intercept/i,
+  /(?:missile|rocket|drone)\w*\s+(?:hit|struck|landed|impacted|slammed)/i,
+  /casualties\s+(?:reported|confirmed)|(?:\d+)\s+(?:killed|dead|wounded|injured)\s+(?:in|after|following)/i,
+  /(?:launched|fired)\s+(?:\d+\s+)?(?:missiles?|rockets?|drones?|ballistic)\s+(?:at|toward|into|on)\s+/i,
+  /(?:barrage|salvo|wave)\s+(?:of\s+)?(?:missiles?|rockets?)\s+(?:hit|struck|targeted|rained)/i,
+  /under\s+(?:attack|fire|bombardment)\s+(?:after|as|from)/i,
+];
+
+// REJECT patterns - prediction markets, speculation, analysis, future tense, diplomacy
+const FALSE_POSITIVE_PATTERNS = [
+  /polymarket|prediction\s*market|betting\s*odds|wagering|gambling/i,
+  /\?\s*$/,                                    // Headlines ending in question mark
+  /\?\s*[-–—|\.]{3}/,                          // Question marks mid-headline
+  /by\s+(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d/i,  // "by March 31?"
+  /will\s+(?:iran|israel|us|america)\s+(?:strike|attack|bomb|hit)/i,
+  /(?:could|would|should|might|may)\s+(?:strike|attack|bomb|hit|target|launch)/i,
+  /(?:threat|threaten|warn|vow|pledge|promise)\w*\s+(?:to\s+)?(?:strike|attack|bomb|retaliat)/i,
+  /(?:prepare|planning|plan|consider|weigh|debate|discuss)\w*\s+(?:to\s+)?(?:strike|attack)/i,
+  /(?:scenario|simulation|exercise|drill|wargame|hypothetical|what.if)/i,
+  /(?:sanction|diplomacy|diplomatic|negotiat|ceasefire|peace\s*talk|deal|agreement|treaty)/i,
+  /(?:opinion|editorial|analysis|commentary|column|op.ed|podcast|interview|book\s*review)/i,
+  /(?:stock|market|oil\s*price|crude|futures|economic|trade\s*war|tariff)/i,
+  /(?:history|historical|years?\s*ago|anniversary|commemorat|looking\s*back|timeline\s*of)/i,
+  /(?:if\s+(?:iran|israel|us)\s+(?:attack|strike|bomb))/i,
+  /(?:risk|likelihood|probability|chance|odds)\s+(?:of\s+)?(?:strike|attack|war)/i,
+  /^\s*(?:how|why|what|when|where|who|can|does|is|are|should|would|could|will)\s/i,  // Questions
 ];
 
 const FEEDS = [
@@ -216,12 +235,14 @@ module.exports = async function scrapeStrikes() {
       const text = `${title} ${snippet}`;
       const lower = text.toLowerCase();
 
-      // Match: known strike pattern, OR strike word + theater location ref, OR breaking + theater
-      const isStrikePattern = STRIKE_PATTERNS.some(p => p.test(text));
-      const hasStrikeWord = /strike|struck|hit|bomb|airstrike|missile|explosion|blast|destroyed|raid|attack|target|offensive|sortie|operation|damage|intercept|rocket|barrage|siren|drone|salvo/i.test(text);
+      // REJECT false positives first (prediction markets, speculation, questions, analysis)
+      if (FALSE_POSITIVE_PATTERNS.some(p => p.test(text))) continue;
+
+      // Must match a confirmed strike pattern (past tense, actual events)
+      const isConfirmed = CONFIRMED_STRIKE_PATTERNS.some(p => p.test(text));
       const hasTheaterRef = /iran|israel|lebanon|syria|iraq|yemen|tehran|isfahan|natanz|fordow|parchin|tabriz|shiraz|bushehr|tel aviv|jerusalem|haifa|beer sheva|ashkelon|ashdod|eilat|sderot|nevatim|beirut|damascus|baghdad|sanaa|gaza|golan|negev/i.test(lower);
-      const isBreaking = /(?:breaking|confirmed|just in|developing|urgent)/i.test(text) && hasTheaterRef && /military|strike|attack|war|bomb|hit|casualt|missile|rocket|siren/i.test(text);
-      if (!isStrikePattern && !(hasStrikeWord && hasTheaterRef) && !isBreaking) continue;
+      const isBreaking = /(?:breaking|confirmed|just in)\s*:/i.test(text) && hasTheaterRef;
+      if (!isConfirmed && !isBreaking) continue;
 
       // Find specific location - must be a real Iranian site, not generic
       let bestLoc = null;
@@ -276,10 +297,13 @@ module.exports = async function scrapeStrikes() {
             // Must be inside Middle East theater bounding box (Yemen to Turkey, Egypt to Pakistan)
             if (lat < 12 || lat > 42 || lng < 29 || lng > 63.5) continue;
 
-            // Must contain strike/military language
-            const isStrike = STRIKE_PATTERNS.some(p => p.test(props.name || ''));
-            const hasStrikeWords = /struck|bombed|hit|destroyed|damaged|targeted|missile|rocket|attack|siren|intercept/.test(name);
-            if (!isStrike && !hasStrikeWords) continue;
+            // Reject false positives
+            if (FALSE_POSITIVE_PATTERNS.some(p => p.test(props.name || ''))) continue;
+
+            // Must contain confirmed strike language
+            const isConfirmed = CONFIRMED_STRIKE_PATTERNS.some(p => p.test(props.name || ''));
+            const hasStrikeWords = /struck|bombed|hit|destroyed|damaged|targeted|shelled|casualties|killed/.test(name);
+            if (!isConfirmed && !hasStrikeWords) continue;
 
             const cityName = findNearestCity(lat, lng);
 
@@ -327,9 +351,12 @@ module.exports = async function scrapeStrikes() {
         const text = `${title} ${snippet}`;
         const lower = text.toLowerCase();
 
-        // Look for theater locations mentioned alongside strike/military language
-        const hasStrikeWord = /strike|struck|hit|bomb|attack|airstrike|missile|explosion|blast|destroyed|damaged|target|offensive|sortie|operation|war|raid|intercept|shell|artillery|cruise|bunker|casualties|killed|dead|rocket|barrage|siren|drone|salvo/i.test(text);
-        if (!hasStrikeWord) continue;
+        // Reject false positives
+        if (FALSE_POSITIVE_PATTERNS.some(p => p.test(text))) continue;
+
+        // Must have confirmed strike language
+        const isConfirmed = CONFIRMED_STRIKE_PATTERNS.some(p => p.test(text));
+        if (!isConfirmed) continue;
 
         // Find all matching locations in this article
         for (const [place, coords] of Object.entries(IRAN_TARGETS)) {

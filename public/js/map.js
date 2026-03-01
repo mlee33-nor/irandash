@@ -172,16 +172,56 @@ const MapModule = (function () {
   function drawNavalBases() {
     NAVAL_BASES.forEach(base => {
       let color, symbol, extraStyle = '';
-      if (base.type === 'hq') {
-        color = '#ffd700'; symbol = '\uD83C\uDF96\uFE0F'; // gold medal 🎖️
-      } else if (base.type === 'naval') {
-        color = '#3399ff'; symbol = '\u2693'; // anchor ⚓
-      } else if (base.type === 'airbase') {
-        color = '#ffaa00'; symbol = '\uD83D\uDEEC'; // landing strip 🛬
-      } else if (base.type === 'nuclear') {
-        color = '#a855f7'; symbol = '\u2622\uFE0F'; // radioactive ☢️
+      const countryLower = (base.country || '').toLowerCase();
+      const descLower = (base.desc || '').toLowerCase();
+      const nameLower = (base.name || '').toLowerCase();
+      // Detect US bases by description/name (hosted in other countries)
+      const isUSBase = /\bus[\s\/]|usaf|centcom|us army|us forces|us sof|us personnel|coalition|5th fleet/i.test(base.desc) || /\bus\b/i.test(base.name);
+
+      // Nuclear overrides everything
+      if (base.type === 'nuclear') {
+        symbol = '\u2622\uFE0F'; // ☢️
+        color = '#a855f7';
+      } else if (countryLower === 'iran') {
+        symbol = '\uD83C\uDDEE\uD83C\uDDF7'; // 🇮🇷
+        color = '#00ff41';
+      } else if (countryLower === 'israel') {
+        symbol = '\uD83C\uDDEE\uD83C\uDDF1'; // 🇮🇱
+        color = '#3399ff';
+      } else if (isUSBase) {
+        symbol = '\uD83C\uDDFA\uD83C\uDDF8'; // 🇺🇸
+        color = '#ffffff';
+      } else if (countryLower === 'turkey') {
+        symbol = '\uD83C\uDDF9\uD83C\uDDF7'; // 🇹🇷
+        color = '#ef4444';
+      } else if (countryLower === 'saudi arabia') {
+        symbol = '\uD83C\uDDF8\uD83C\uDDE6'; // 🇸🇦
+        color = '#10b981';
+      } else if (countryLower === 'syria') {
+        // Check if Russian base
+        if (/russian|russia|vks/i.test(base.desc)) {
+          symbol = '\uD83C\uDDF7\uD83C\uDDFA'; // 🇷🇺
+          color = '#ef4444';
+        } else {
+          symbol = '\uD83C\uDDF8\uD83C\uDDFE'; // 🇸🇾
+          color = '#ef4444';
+        }
+      } else if (countryLower === 'iraq') {
+        symbol = '\uD83C\uDDEE\uD83C\uDDF6'; // 🇮🇶
+        color = '#ef4444';
+      } else if (countryLower === 'yemen') {
+        symbol = '\uD83C\uDDFE\uD83C\uDDEA'; // 🇾🇪
+        color = '#ef4444';
       } else {
-        color = '#ef4444'; symbol = '\uD83E\uDE96'; // military helmet 🪖
+        // Qatar, UAE, Bahrain, Kuwait - show host country flag
+        const flagMap = {
+          'qatar': '\uD83C\uDDF6\uD83C\uDDE6',
+          'uae': '\uD83C\uDDE6\uD83C\uDDEA',
+          'bahrain': '\uD83C\uDDE7\uD83C\uDDED',
+          'kuwait': '\uD83C\uDDF0\uD83C\uDDFC',
+        };
+        symbol = flagMap[countryLower] || '\uD83E\uDE96';
+        color = '#ef4444';
       }
 
       const icon = L.divIcon({

@@ -120,15 +120,37 @@ const IRAN_STRIKE_LOCATIONS = {
 };
 
 // Detect strikes mentioned in news/tweets and add them to strikes data
+const NEWS_FALSE_POSITIVES = [
+  /polymarket|prediction\s*market|betting|odds/i,
+  /\?\s*$/,
+  /(?:could|would|should|might|may|will)\s+(?:strike|attack|bomb|hit|target|launch)/i,
+  /(?:threat|threaten|warn|vow|plan|prepar|consider|scenario|drill|exercise)/i,
+  /(?:sanction|diplomacy|negotiat|ceasefire|peace|deal|opinion|editorial|analysis)/i,
+  /(?:history|historical|years?\s*ago|anniversary)/i,
+  /(?:if|risk|likelihood|probability|chance|odds)\s+(?:of\s+)?(?:strike|attack|war)/i,
+];
+const NEWS_CONFIRMED = [
+  /(?:struck|hit|bombed|shelled|destroyed|damaged)\s+(?:in|at|near)/i,
+  /explosion\w*\s+(?:reported|heard|in|at|near|rocked)/i,
+  /(?:sirens?|red alert)\s+(?:sound|heard|activated|blaring)/i,
+  /(?:missile|rocket|drone)\w*\s+(?:hit|struck|landed|impacted|slammed)/i,
+  /casualties\s+(?:reported|confirmed)|(?:\d+)\s+(?:killed|dead|wounded|injured)/i,
+  /(?:launched|fired)\s+(?:\d+\s+)?(?:missiles?|rockets?|drones?|ballistic)/i,
+  /under\s+(?:attack|fire|bombardment)/i,
+  /(?:breaking|confirmed|just in)\s*:/i,
+];
+
 function extractStrikesFromNews(articles) {
   const found = [];
-  const strikeWords = /strike|struck|hit|bomb|attack|airstrike|missile|explosion|blast|destroyed|damage|target|offensive|raid|shell|cruise|killed|casualties|intercept|siren|rocket|barrage|salvo|drone/i;
-  const theaterRef = /iran|iranian|israel|israeli|lebanon|lebanese|hezbollah|houthi|syria|syrian|gaza|iraq|iraqi|yemen/i;
 
   for (const article of articles) {
     const text = `${article.title || ''} ${article.summary || ''}`;
-    if (!strikeWords.test(text)) continue;
-    if (!theaterRef.test(text)) continue;
+
+    // Reject false positives
+    if (NEWS_FALSE_POSITIVES.some(p => p.test(text))) continue;
+
+    // Must match confirmed strike language
+    if (!NEWS_CONFIRMED.some(p => p.test(text))) continue;
 
     const lower = text.toLowerCase();
     for (const [place, coords] of Object.entries(IRAN_STRIKE_LOCATIONS)) {
