@@ -31,13 +31,7 @@ module.exports = async function scrapeConflicts() {
 
   // Deduplicate by location proximity + similar time
   const deduped = deduplicateEvents(events);
-
-  if (deduped.length > 0) {
-    return deduped.slice(0, 60);
-  }
-
-  // Fallback only if everything fails
-  return generateFallbackData();
+  return deduped.slice(0, 60);
 };
 
 async function fetchGdeltConflicts() {
@@ -461,36 +455,4 @@ function deduplicateEvents(events) {
   // Sort by date descending
   result.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   return result;
-}
-
-function generateFallbackData() {
-  const zones = [
-    { location: 'Gaza City', country: 'Palestine', lat: 31.50, lng: 34.47, type: 'Explosions/Remote violence' },
-    { location: 'Rafah', country: 'Palestine', lat: 31.30, lng: 34.25, type: 'Battles' },
-    { location: 'Khan Younis', country: 'Palestine', lat: 31.35, lng: 34.30, type: 'Explosions/Remote violence' },
-    { location: 'South Lebanon', country: 'Lebanon', lat: 33.27, lng: 35.20, type: 'Explosions/Remote violence' },
-    { location: 'Hodeidah', country: 'Yemen', lat: 14.80, lng: 42.95, type: 'Explosions/Remote violence' },
-    { location: 'Idlib', country: 'Syria', lat: 35.93, lng: 36.63, type: 'Battles' },
-    { location: 'Deir ez-Zor', country: 'Syria', lat: 35.33, lng: 40.14, type: 'Battles' },
-  ];
-
-  const now = new Date();
-  return zones.map((z, i) => {
-    const date = new Date(now - Math.random() * 3 * 86400000);
-    return {
-      id: `fallback-${i}`,
-      type: z.type,
-      subtype: '',
-      country: z.country,
-      location: z.location,
-      lat: z.lat + (Math.random() - 0.5) * 0.1,
-      lng: z.lng + (Math.random() - 0.5) * 0.1,
-      date: formatDate(date),
-      fatalities: 0,
-      actor1: 'Unknown',
-      actor2: 'Unknown',
-      notes: `Ongoing conflict reported in ${z.location}, ${z.country}`,
-      source: 'Fallback'
-    };
-  });
 }

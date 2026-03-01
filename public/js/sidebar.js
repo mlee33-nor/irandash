@@ -5,9 +5,8 @@ const SidebarModule = (function () {
   function updateAircraftStats(data) {
     document.getElementById('aircraft-count').textContent = data.length;
 
-    // Count military-origin countries (rough heuristic)
-    const militaryCountries = ['United States', 'Russia', 'Israel', 'Iran', 'Turkey', 'France', 'United Kingdom'];
-    const military = data.filter(a => militaryCountries.includes(a.country));
+    // Count aircraft flagged as military by callsign detection
+    const military = data.filter(a => a.military);
     document.getElementById('aircraft-military').textContent = military.length;
 
     document.getElementById('aircraft-time').textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
