@@ -116,6 +116,25 @@
     </div>
   </div>
 
+  <!-- Mobile Tab Bar -->
+  <div class="mobile-tab-bar">
+    <button class="mobile-tab" data-panel="none" id="tab-map">
+      <span class="tab-icon">&#9650;</span>MAP
+    </button>
+    <button class="mobile-tab" data-panel="news-panel" id="tab-news">
+      <span class="tab-icon">&#9654;</span>NEWS
+    </button>
+    <button class="mobile-tab" data-panel="aircraft-stats" id="tab-air">
+      <span class="tab-icon">&#9992;</span>AIR
+    </button>
+    <button class="mobile-tab" data-panel="ship-stats" id="tab-sea">
+      <span class="tab-icon">&#9875;</span>SEA
+    </button>
+    <button class="mobile-tab" data-panel="events-panel" id="tab-events">
+      <span class="tab-icon">&#9888;</span>ALERTS
+    </button>
+  </div>
+
   <!-- Live Stream Panel -->
   <div id="stream-panel" class="stream-panel">
     <div id="stream-header" class="stream-header">
@@ -140,5 +159,46 @@
   <script src="js/news.js"></script>
   <script src="js/sidebar.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    // Mobile tab bar panel toggling
+    (function() {
+      const tabs = document.querySelectorAll('.mobile-tab');
+      const panelClasses = ['news-panel','aircraft-stats','ship-stats','events-panel'];
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const target = tab.dataset.panel;
+
+          // Close all panels
+          panelClasses.forEach(cls => {
+            const el = document.querySelector('.' + cls);
+            if (el) el.classList.remove('mobile-open');
+          });
+
+          // Deactivate all tabs
+          tabs.forEach(t => t.classList.remove('active'));
+
+          if (target === 'none') {
+            // Map tab - just close everything
+            tab.classList.add('active');
+            return;
+          }
+
+          const panel = document.querySelector('.' + target);
+          if (panel) {
+            if (panel.classList.contains('mobile-open')) {
+              panel.classList.remove('mobile-open');
+            } else {
+              panel.classList.add('mobile-open');
+              tab.classList.add('active');
+            }
+          }
+        });
+      });
+
+      // Default: map tab active
+      document.getElementById('tab-map')?.classList.add('active');
+    })();
+  </script>
 </body>
 </html>

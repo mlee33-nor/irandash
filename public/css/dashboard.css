@@ -760,31 +760,44 @@ html, body {
   .events-panel { grid-column: 2; }
 }
 
-/* Mobile layout */
+/* Mobile layout - map fullscreen with slide-up panels */
 @media (max-width: 768px) {
   .top-bar {
-    flex-wrap: wrap;
-    height: auto;
-    padding: 4px 8px;
+    height: 32px;
+    padding: 0 8px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 500;
   }
   .top-bar-center .title {
-    font-size: 10px;
-    letter-spacing: 2px;
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
+  .top-bar-left .logo {
+    font-size: 12px;
   }
   .classification { display: none; }
 
   .dashboard-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto auto auto;
+    display: block;
+    height: 100vh;
+    position: relative;
   }
-  .map-panel { grid-column: 1; grid-row: 1; }
-  .news-panel { grid-column: 1; grid-row: 2; max-height: 200px; }
-  .aircraft-stats { grid-column: 1; grid-row: 3; }
-  .ship-stats { grid-column: 1; grid-row: 4; display: block; }
-  .events-panel { grid-column: 1; grid-row: 5; }
 
-  html, body {
-    overflow-y: auto;
+  /* Map takes full screen */
+  .map-panel {
+    position: fixed;
+    top: 32px;
+    left: 0;
+    right: 0;
+    bottom: 44px;
+    z-index: 1;
+  }
+
+  .map-panel .panel-header {
+    padding: 4px 6px;
   }
 
   .map-controls {
@@ -792,18 +805,100 @@ html, body {
     gap: 2px;
   }
   .ctrl-btn {
-    font-size: 8px;
+    font-size: 7px;
     padding: 2px 4px;
+  }
+
+  /* Bottom tab bar for mobile */
+  .news-panel,
+  .aircraft-stats,
+  .ship-stats,
+  .events-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 44px;
+    height: 45vh;
+    z-index: 400;
+    display: none;
+    overflow-y: auto;
+    border-top: 2px solid var(--border-bright);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.8);
+  }
+
+  .news-panel.mobile-open,
+  .aircraft-stats.mobile-open,
+  .ship-stats.mobile-open,
+  .events-panel.mobile-open {
+    display: flex;
+  }
+
+  html, body {
+    overflow: hidden;
   }
 
   .stream-panel {
     width: 90vw;
     height: 200px;
-    bottom: 60px;
+    bottom: 50px;
     right: 5vw;
+    left: 5vw;
   }
   .stream-toggle-btn {
-    bottom: 20px;
-    right: 10px;
+    bottom: 50px;
+    right: 8px;
+    font-size: 8px;
+    padding: 3px 6px;
+  }
+}
+
+/* Mobile bottom tab bar */
+.mobile-tab-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-tab-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 44px;
+    background: var(--bg-panel-header);
+    border-top: 1px solid var(--border-bright);
+    z-index: 500;
+  }
+
+  .mobile-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 8px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    padding: 4px 0;
+    border-right: 1px solid var(--border);
+  }
+
+  .mobile-tab:last-child {
+    border-right: none;
+  }
+
+  .mobile-tab .tab-icon {
+    font-size: 16px;
+    margin-bottom: 2px;
+  }
+
+  .mobile-tab.active {
+    color: var(--text-primary);
+    background: rgba(0, 255, 65, 0.05);
+    text-shadow: var(--glow-green);
   }
 }
