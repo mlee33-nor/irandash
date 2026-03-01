@@ -59,18 +59,22 @@
         if (data.some(a => a.source && a.source.startsWith('X/'))) pulseIndicator('dp-osint');
         updateTicker(data);
         updateThreatLevel(data);
+        checkBreaking(data);
+        bumpActivity();
         break;
 
       case 'aircraft':
         MapModule.updateAircraft(data);
         SidebarModule.updateAircraftStats(data);
         pulseIndicator('dp-air');
+        bumpActivity();
         break;
 
       case 'ships':
         MapModule.updateShips(data);
         SidebarModule.updateShipStats(data);
         pulseIndicator('dp-sea');
+        bumpActivity();
         break;
 
       case 'events':
@@ -139,16 +143,83 @@
     if (el) el.textContent = data.length;
   }
 
-  // Zulu clock
-  function startZuluClock() {
-    const el = document.getElementById('zulu-clock');
-    if (!el) return;
-    setInterval(() => {
-      const now = new Date();
-      el.textContent = now.toISOString().slice(11, 19) + 'Z';
-    }, 1000);
+  // Breaking news banner
+  let lastBreakingId = '';
+  function checkBreaking(articles) {
+    const breaking = articles.find(a =>
+      a.severity === 'critical' &&
+      a.id !== lastBreakingId &&
+      (a.title || '').toLowerCase().match(/breaking|just in|confirmed|killed|dead|supreme leader/)
+    );
+    if (!breaking) return;
+    lastBreakingId = breaking.id;
+    const banner = document.getElementById('breaking-banner');
+    const text = document.getElementById('breaking-text');
+    if (!banner || !text) return;
+    text.textContent = (breaking.title || '').toUpperCase();
+    banner.classList.add('visible');
+    // Play alert sound
+    playAlertSound();
+    // Auto-hide after 30s
+    setTimeout(() => banner.classList.remove('visible'), 30000);
   }
-  startZuluClock();
+
+  // Close breaking banner
+  const breakingClose = document.getElementById('breaking-close');
+  if (breakingClose) {
+    breakingClose.addEventListener('click', () => {
+      document.getElementById('breaking-banner')?.classList.remove('visible');
+    });
+  }
+
+  // Sound alert system
+  let soundEnabled = false;
+  const soundToggle = document.getElementById('sound-toggle');
+  if (soundToggle) {
+    soundToggle.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      soundToggle.classList.toggle('active', soundEnabled);
+      soundToggle.innerHTML = soundEnabled ? '&#128264;' : '&#128263;';
+    });
+  }
+
+  function playAlertSound() {
+    if (!soundEnabled) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      // Two-tone alert beep
+      [800, 600].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        gain.gain.value = 0.08;
+        osc.start(ctx.currentTime + i * 0.15);
+        osc.stop(ctx.currentTime + i * 0.15 + 0.12);
+      });
+    } catch (e) {}
+  }
+
+  // Activity sparkline - tracks updates per minute
+  const sparkData = new Array(20).fill(0);
+  let sparkCounter = 0;
+  function bumpActivity() {
+    sparkCounter++;
+  }
+  // Update sparkline every 3 seconds
+  setInterval(() => {
+    sparkData.push(sparkCounter);
+    sparkData.shift();
+    sparkCounter = 0;
+    const sparkEl = document.getElementById('activity-spark');
+    if (!sparkEl) return;
+    const max = Math.max(...sparkData, 1);
+    sparkEl.innerHTML = sparkData.map(v =>
+      `<div class="spark-bar" style="height:${Math.max(1, (v / max) * 18)}px"></div>`
+    ).join('');
+  }, 3000);
 
   function setStatus(state) {
     const el = document.getElementById('ws-status');

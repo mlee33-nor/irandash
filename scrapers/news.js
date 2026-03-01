@@ -109,11 +109,25 @@ module.exports = async function scrapeNews() {
     const { source, items } = result.value;
 
     for (const item of items.slice(0, 20)) {
-      // Skip articles older than 48 hours
+      // Require a valid date - skip items with no date (stale/cached)
+      let timestamp = null;
       if (item.isoDate) {
-        const age = Date.now() - new Date(item.isoDate).getTime();
-        if (age > 48 * 60 * 60 * 1000) continue;
+        const parsed = new Date(item.isoDate);
+        if (!isNaN(parsed.getTime())) {
+          const age = Date.now() - parsed.getTime();
+          if (age > 48 * 60 * 60 * 1000) continue;
+          if (age < -60 * 60 * 1000) continue; // skip future dates > 1h
+          timestamp = parsed.toISOString();
+        }
+      } else if (item.pubDate) {
+        const parsed = new Date(item.pubDate);
+        if (!isNaN(parsed.getTime())) {
+          const age = Date.now() - parsed.getTime();
+          if (age > 48 * 60 * 60 * 1000) continue;
+          timestamp = parsed.toISOString();
+        }
       }
+      if (!timestamp) continue; // no valid date = skip
 
       const text = `${item.title || ''} ${item.contentSnippet || item.content || ''}`.toLowerCase();
       const matches = KEYWORDS.some(kw => text.includes(kw));
@@ -126,7 +140,7 @@ module.exports = async function scrapeNews() {
         summary: (item.contentSnippet || '').slice(0, 200),
         source,
         url: item.link,
-        timestamp: item.isoDate || new Date().toISOString(),
+        timestamp,
         severity: getSeverity(text),
         location
       });

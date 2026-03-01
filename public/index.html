@@ -22,26 +22,12 @@
     </div>
   </div>
 
-  <!-- Threat level indicator -->
-  <div class="threat-level">
-    <div class="threat-level-label">THREAT LEVEL</div>
-    <div class="threat-level-value critical" id="threat-level">CRITICAL</div>
-  </div>
 
-  <!-- Data pulse indicators -->
-  <div class="data-pulse" id="data-pulse">
-    <div class="data-pulse-label">DATA FEEDS</div>
-    <div class="data-pulse-row"><div class="data-pulse-dot active" id="dp-news"></div>NEWS FEED</div>
-    <div class="data-pulse-row"><div class="data-pulse-dot" id="dp-air"></div>AIR TRACK</div>
-    <div class="data-pulse-row"><div class="data-pulse-dot" id="dp-sea"></div>SEA TRACK</div>
-    <div class="data-pulse-row"><div class="data-pulse-dot" id="dp-strikes"></div>STRIKE DET</div>
-    <div class="data-pulse-row"><div class="data-pulse-dot" id="dp-osint"></div>X / OSINT</div>
-  </div>
-
-  <!-- Operational clock -->
-  <div class="op-clock">
-    <div class="op-clock-label">ZULU TIME</div>
-    <span id="zulu-clock">00:00:00Z</span>
+  <!-- Breaking news flash banner -->
+  <div class="breaking-banner" id="breaking-banner">
+    <span class="breaking-banner-tag">BREAKING</span>
+    <span class="breaking-banner-text" id="breaking-text"></span>
+    <button class="breaking-banner-close" id="breaking-close">&times;</button>
   </div>
 
   <!-- Strike counter -->
@@ -63,7 +49,20 @@
       <span class="title">IRAN THEATER - REAL-TIME INTELLIGENCE DASHBOARD</span>
     </div>
     <div class="top-bar-right">
+      <div class="threat-level">
+        <span class="threat-level-label">DEFCON</span>
+        <span class="threat-level-value critical" id="threat-level">CRITICAL</span>
+      </div>
+      <div class="data-pulse" id="data-pulse">
+        <div class="data-pulse-row"><div class="data-pulse-dot active" id="dp-news"></div>N</div>
+        <div class="data-pulse-row"><div class="data-pulse-dot" id="dp-air"></div>A</div>
+        <div class="data-pulse-row"><div class="data-pulse-dot" id="dp-sea"></div>S</div>
+        <div class="data-pulse-row"><div class="data-pulse-dot" id="dp-strikes"></div>ST</div>
+        <div class="data-pulse-row"><div class="data-pulse-dot" id="dp-osint"></div>X</div>
+      </div>
       <span class="clock" id="clock"></span>
+      <div class="activity-spark" id="activity-spark"></div>
+      <button class="sound-toggle" id="sound-toggle" title="Alert sounds">&#128264;</button>
       <span class="ws-status" id="ws-status">&#9679; CONNECTING</span>
     </div>
   </header>
