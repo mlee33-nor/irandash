@@ -11,6 +11,11 @@ const FEEDS = [
   { url: 'https://english.alarabiya.net/tools/rss', source: 'Al Arabiya' },
   { url: 'https://www.timesofisrael.com/feed/', source: 'Times of Israel' },
   { url: 'https://www.jpost.com/rss/rssfeedsfrontpage.aspx', source: 'Jerusalem Post' },
+  { url: 'https://moxie.foxnews.com/google-publisher/world.xml', source: 'Fox News' },
+  { url: 'https://abcnews.go.com/abcnews/internationalheadlines', source: 'ABC News' },
+  { url: 'https://feeds.nbcnews.com/nbcnews/public/world', source: 'NBC News' },
+  { url: 'https://rss.nytimes.com/services/xml/rss/nyt/MiddleEast.xml', source: 'NY Times' },
+  { url: 'https://news.google.com/rss/search?q=iran+strike+OR+bomb+OR+attack+OR+military&hl=en-US&gl=US&ceid=US:en', source: 'Google News' },
 ];
 
 const KEYWORDS = [

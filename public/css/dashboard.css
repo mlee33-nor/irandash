@@ -130,7 +130,7 @@ html, body {
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 340px;
-  grid-template-rows: 1fr 200px;
+  grid-template-rows: 1fr 220px;
   height: calc(100vh - 42px);
   gap: 1px;
   background: rgba(255, 255, 255, 0.03);
@@ -284,26 +284,162 @@ html, body {
 .severity-medium { border-left: 2px solid var(--accent-blue); }
 .severity-low { border-left: 2px solid var(--border-bright); }
 
-/* ===== BOTTOM STATS ===== */
-.aircraft-stats {
-  grid-column: 1;
+/* ===== BOTTOM SECTION - Resizable ===== */
+.bottom-section {
+  grid-column: 1 / -1;
   grid-row: 2;
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
 }
 
-.ship-stats {
-  grid-column: 2;
-  grid-row: 2;
+.bottom-section.collapsed .bottom-content,
+.bottom-section.collapsed .bottom-tabs {
+  display: none;
 }
 
-.events-panel {
-  grid-column: 3;
-  grid-row: 2;
+.bottom-drag-handle {
+  height: 10px;
+  background: var(--bg-panel-header);
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+  touch-action: none;
+  transition: background 0.15s;
 }
 
-.stats-content {
-  padding: 10px 14px;
+.bottom-drag-handle:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.drag-indicator {
+  width: 40px;
+  height: 3px;
+  background: var(--text-muted);
+  border-radius: 2px;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+}
+
+.bottom-drag-handle:hover .drag-indicator {
+  opacity: 0.8;
+  background: var(--accent-blue);
+}
+
+.bottom-tabs {
+  display: flex;
+  background: var(--bg-panel-header);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.btab {
   flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.btab:hover {
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.btab.active {
+  color: var(--accent-blue);
+  border-bottom-color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.bottom-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.btab-content {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   overflow-y: auto;
+}
+
+.btab-content.active {
+  display: block;
+}
+
+/* Webcam grid */
+.webcam-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 4px;
+  height: 100%;
+}
+
+.webcam-card {
+  position: relative;
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.webcam-label {
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--accent-red);
+  background: rgba(0, 0, 0, 0.85);
+  padding: 3px 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.webcam-label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--accent-red);
+  border-radius: 50%;
+  animation: strikePulse 2s infinite;
+  flex-shrink: 0;
+}
+
+.webcam-card iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
+  min-height: 100px;
+}
+
+/* Alerts content */
+.alerts-content {
+  padding: 10px 14px;
 }
 
 .stat-row {
@@ -327,41 +463,6 @@ html, body {
   color: var(--text-white);
   font-weight: 300;
   font-family: 'Share Tech Mono', monospace;
-}
-
-.stat-time {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-family: 'Share Tech Mono', monospace;
-}
-
-/* ===== AIRCRAFT / SHIP LIST ===== */
-.aircraft-list, .ship-list {
-  margin-top: 8px;
-  max-height: 100px;
-  overflow-y: auto;
-}
-
-.list-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 0;
-  font-size: 11px;
-  color: var(--text-dim);
-  border-bottom: 1px solid var(--border);
-}
-
-.list-item .callsign {
-  color: var(--text-primary);
-  min-width: 80px;
-  font-family: 'Share Tech Mono', monospace;
-  font-weight: 500;
-}
-
-.list-item .detail {
-  color: var(--text-muted);
-  text-align: right;
-  font-size: 10px;
 }
 
 /* ===== TIMELINE ===== */
@@ -657,7 +758,7 @@ html, body {
 /* ===== LIVE STREAM PANEL ===== */
 .stream-panel {
   position: fixed;
-  bottom: 220px;
+  bottom: 240px;
   right: 350px;
   width: 420px;
   height: 260px;
@@ -730,7 +831,7 @@ html, body {
 
 .stream-toggle-btn {
   position: fixed;
-  bottom: 210px;
+  bottom: 230px;
   right: 12px;
   z-index: 999;
   background: rgba(239, 68, 68, 0.08);
@@ -757,9 +858,8 @@ html, body {
   }
   .map-panel { grid-column: 1 / 2; }
   .news-panel { grid-column: 2; }
-  .aircraft-stats { grid-column: 1; }
-  .ship-stats { display: none; }
-  .events-panel { grid-column: 2; }
+  .bottom-section { grid-column: 1 / -1; }
+  .webcam-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* Mobile layout - map fullscreen with slide-up panels */
@@ -811,14 +911,12 @@ html, body {
   }
 
   .news-panel,
-  .aircraft-stats,
-  .ship-stats,
-  .events-panel {
+  .bottom-section {
     position: fixed;
     left: 0;
     right: 0;
     bottom: 48px;
-    height: 45vh;
+    height: 50vh;
     z-index: 400;
     display: none;
     overflow-y: auto;
@@ -827,10 +925,12 @@ html, body {
   }
 
   .news-panel.mobile-open,
-  .aircraft-stats.mobile-open,
-  .ship-stats.mobile-open,
-  .events-panel.mobile-open {
+  .bottom-section.mobile-open {
     display: flex;
+  }
+
+  .webcam-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   html, body {

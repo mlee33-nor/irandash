@@ -55,63 +55,73 @@
       <div class="news-feed" id="news-feed"></div>
     </div>
 
-    <!-- Bottom stats panels -->
-    <div class="panel stats-panel aircraft-stats">
-      <div class="panel-header">
-        <span class="panel-title">&#9992; AIRCRAFT TRACKING</span>
+    <!-- Bottom panels - resizable -->
+    <div class="bottom-section" id="bottom-section">
+      <div class="bottom-drag-handle" id="bottom-drag-handle">
+        <span class="drag-indicator"></span>
       </div>
-      <div class="stats-content" id="aircraft-stats">
-        <div class="stat-row">
-          <span class="stat-label">TRACKED</span>
-          <span class="stat-value" id="aircraft-count">--</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">MILITARY</span>
-          <span class="stat-value" id="aircraft-military">--</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">LAST UPDATE</span>
-          <span class="stat-value stat-time" id="aircraft-time">--:--:--</span>
-        </div>
-        <div class="aircraft-list" id="aircraft-list"></div>
+      <div class="bottom-tabs">
+        <button class="btab active" data-btab="webcams">LIVE CAMS</button>
+        <button class="btab" data-btab="channels">NEWS CHANNELS</button>
+        <button class="btab" data-btab="alerts">ALERTS &amp; EVENTS</button>
       </div>
-    </div>
-
-    <div class="panel stats-panel ship-stats">
-      <div class="panel-header">
-        <span class="panel-title">&#9875; NAVAL TRACKING</span>
-      </div>
-      <div class="stats-content" id="ship-stats">
-        <div class="stat-row">
-          <span class="stat-label">VESSELS</span>
-          <span class="stat-value" id="ship-count">--</span>
+      <div class="bottom-content">
+        <!-- Webcams tab -->
+        <div class="btab-content active" id="btab-webcams">
+          <div class="webcam-grid">
+            <div class="webcam-card">
+              <div class="webcam-label">TEL AVIV - LIVE</div>
+              <iframe src="https://www.youtube.com/embed/jNZM_H6q1rY?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+            <div class="webcam-card">
+              <div class="webcam-label">JERUSALEM - LIVE</div>
+              <iframe src="https://www.youtube.com/embed/LGBmHIssQ2g?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+            <div class="webcam-card">
+              <div class="webcam-label">HAIFA - LIVE</div>
+              <iframe src="https://www.youtube.com/embed/D4VUlAPiZ4o?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+            <div class="webcam-card">
+              <div class="webcam-label">IRAN / TEHRAN - LIVE</div>
+              <iframe src="https://www.youtube.com/embed/V6VxVCbOcR0?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+          </div>
         </div>
-        <div class="stat-row">
-          <span class="stat-label">TANKERS</span>
-          <span class="stat-value" id="ship-tankers">--</span>
+        <!-- News Channels tab -->
+        <div class="btab-content" id="btab-channels">
+          <div class="webcam-grid">
+            <div class="webcam-card">
+              <div class="webcam-label">AL JAZEERA ENGLISH</div>
+              <iframe src="https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+            <div class="webcam-card">
+              <div class="webcam-label">FRANCE 24 ENGLISH</div>
+              <iframe src="https://www.youtube.com/embed/Ap-UM1O9RBk?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+            <div class="webcam-card">
+              <div class="webcam-label">DW NEWS</div>
+              <iframe src="https://www.youtube.com/embed/V5N1IVlnIpE?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+            <div class="webcam-card">
+              <div class="webcam-label">SKY NEWS</div>
+              <iframe src="https://www.youtube.com/embed/9Auq9mYxFEE?autoplay=0&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+          </div>
         </div>
-        <div class="stat-row">
-          <span class="stat-label">LAST UPDATE</span>
-          <span class="stat-value stat-time" id="ship-time">--:--:--</span>
+        <!-- Alerts tab -->
+        <div class="btab-content" id="btab-alerts">
+          <div class="alerts-content">
+            <div class="stat-row">
+              <span class="stat-label">ACTIVE EVENTS</span>
+              <span class="stat-value" id="events-count">--</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">CONFLICTS</span>
+              <span class="stat-value" id="conflicts-count">--</span>
+            </div>
+            <div class="timeline" id="event-timeline"></div>
+          </div>
         </div>
-        <div class="ship-list" id="ship-list"></div>
-      </div>
-    </div>
-
-    <div class="panel stats-panel events-panel">
-      <div class="panel-header">
-        <span class="panel-title">&#9888; ALERTS &amp; EVENTS TIMELINE</span>
-      </div>
-      <div class="stats-content">
-        <div class="stat-row">
-          <span class="stat-label">ACTIVE EVENTS</span>
-          <span class="stat-value" id="events-count">--</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">CONFLICTS</span>
-          <span class="stat-value" id="conflicts-count">--</span>
-        </div>
-        <div class="timeline" id="event-timeline"></div>
       </div>
     </div>
   </div>
@@ -124,13 +134,10 @@
     <button class="mobile-tab" data-panel="news-panel" id="tab-news">
       <span class="tab-icon">&#9654;</span>NEWS
     </button>
-    <button class="mobile-tab" data-panel="aircraft-stats" id="tab-air">
-      <span class="tab-icon">&#9992;</span>AIR
+    <button class="mobile-tab" data-panel="bottom-section" id="tab-live">
+      <span class="tab-icon">&#9655;</span>LIVE
     </button>
-    <button class="mobile-tab" data-panel="ship-stats" id="tab-sea">
-      <span class="tab-icon">&#9875;</span>SEA
-    </button>
-    <button class="mobile-tab" data-panel="events-panel" id="tab-events">
+    <button class="mobile-tab" data-panel="alerts-mobile" id="tab-events">
       <span class="tab-icon">&#9888;</span>ALERTS
     </button>
   </div>
@@ -163,7 +170,7 @@
     // Mobile tab bar panel toggling
     (function() {
       const tabs = document.querySelectorAll('.mobile-tab');
-      const panelClasses = ['news-panel','aircraft-stats','ship-stats','events-panel'];
+      const panelClasses = ['news-panel','bottom-section'];
 
       tabs.forEach(tab => {
         tab.addEventListener('click', () => {
@@ -179,7 +186,21 @@
           tabs.forEach(t => t.classList.remove('active'));
 
           if (target === 'none') {
-            // Map tab - just close everything
+            tab.classList.add('active');
+            return;
+          }
+
+          // Handle alerts-mobile: open bottom section on alerts tab
+          if (target === 'alerts-mobile') {
+            const bs = document.querySelector('.bottom-section');
+            if (bs) {
+              bs.classList.add('mobile-open');
+              // Switch to alerts tab
+              document.querySelectorAll('.btab').forEach(b => b.classList.remove('active'));
+              document.querySelectorAll('.btab-content').forEach(c => c.classList.remove('active'));
+              document.querySelector('[data-btab="alerts"]')?.classList.add('active');
+              document.getElementById('btab-alerts')?.classList.add('active');
+            }
             tab.classList.add('active');
             return;
           }
@@ -198,6 +219,72 @@
 
       // Default: map tab active
       document.getElementById('tab-map')?.classList.add('active');
+
+      // Bottom tab switching
+      document.querySelectorAll('.btab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.btab').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.btab-content').forEach(c => c.classList.remove('active'));
+          btn.classList.add('active');
+          const tab = btn.dataset.btab;
+          document.getElementById('btab-' + tab)?.classList.add('active');
+        });
+      });
+
+      // Drag handle to resize bottom section
+      const dragHandle = document.getElementById('bottom-drag-handle');
+      const bottomSection = document.getElementById('bottom-section');
+      if (dragHandle && bottomSection) {
+        let isDragging = false;
+        let startY = 0;
+        let startHeight = 0;
+
+        function startDrag(clientY) {
+          isDragging = true;
+          startY = clientY;
+          startHeight = bottomSection.offsetHeight;
+          document.body.style.cursor = 'ns-resize';
+          document.body.style.userSelect = 'none';
+        }
+
+        function doDrag(clientY) {
+          if (!isDragging) return;
+          const delta = startY - clientY;
+          const newHeight = Math.max(60, Math.min(window.innerHeight * 0.7, startHeight + delta));
+          bottomSection.style.height = newHeight + 'px';
+          // Update grid
+          const grid = document.querySelector('.dashboard-grid');
+          if (grid) grid.style.gridTemplateRows = `1fr ${newHeight}px`;
+        }
+
+        function endDrag() {
+          isDragging = false;
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+        }
+
+        dragHandle.addEventListener('mousedown', e => startDrag(e.clientY));
+        document.addEventListener('mousemove', e => doDrag(e.clientY));
+        document.addEventListener('mouseup', endDrag);
+        dragHandle.addEventListener('touchstart', e => startDrag(e.touches[0].clientY));
+        document.addEventListener('touchmove', e => { if (isDragging) { e.preventDefault(); doDrag(e.touches[0].clientY); } }, { passive: false });
+        document.addEventListener('touchend', endDrag);
+
+        // Double-click to collapse/expand
+        dragHandle.addEventListener('dblclick', () => {
+          if (bottomSection.classList.contains('collapsed')) {
+            bottomSection.classList.remove('collapsed');
+            bottomSection.style.height = '';
+            const grid = document.querySelector('.dashboard-grid');
+            if (grid) grid.style.gridTemplateRows = '';
+          } else {
+            bottomSection.classList.add('collapsed');
+            bottomSection.style.height = '36px';
+            const grid = document.querySelector('.dashboard-grid');
+            if (grid) grid.style.gridTemplateRows = '1fr 36px';
+          }
+        });
+      }
     })();
   </script>
 </body>

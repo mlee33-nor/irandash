@@ -3,58 +3,23 @@
 const SidebarModule = (function () {
 
   function updateAircraftStats(data) {
-    document.getElementById('aircraft-count').textContent = data.length;
-
-    // Count aircraft flagged as military by callsign detection
-    const military = data.filter(a => a.military);
-    document.getElementById('aircraft-military').textContent = military.length;
-
-    document.getElementById('aircraft-time').textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
-
-    // Update aircraft list
-    const listEl = document.getElementById('aircraft-list');
-    listEl.innerHTML = '';
-    data.slice(0, 12).forEach(a => {
-      const div = document.createElement('div');
-      div.className = 'list-item';
-      const milTag = a.military ? ' [MIL]' : '';
-      div.innerHTML = `
-        <span class="callsign">${escapeHtml(a.callsign) || a.icao24}${milTag}</span>
-        <span class="detail">${escapeHtml(a.country)} | ${a.altitude ? Math.round(a.altitude / 100) + '00ft' : 'GND'}${a.role ? ' | ' + escapeHtml(a.role) : ''}</span>
-      `;
-      listEl.appendChild(div);
-    });
+    // Aircraft panel removed - no-op
   }
 
   function updateShipStats(data) {
-    document.getElementById('ship-count').textContent = data.length;
-
-    const tankers = data.filter(s => s.type === 'Tanker');
-    document.getElementById('ship-tankers').textContent = tankers.length;
-
-    document.getElementById('ship-time').textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
-
-    // Update ship list
-    const listEl = document.getElementById('ship-list');
-    listEl.innerHTML = '';
-    data.slice(0, 10).forEach(s => {
-      const div = document.createElement('div');
-      div.className = 'list-item';
-      div.innerHTML = `
-        <span class="callsign">${escapeHtml(s.name)}${s.flag ? ' [' + escapeHtml(s.flag) + ']' : ''}</span>
-        <span class="detail">${escapeHtml(s.type)} | ${s.speed}kts${s.role ? ' | ' + escapeHtml(s.role) : ''}</span>
-      `;
-      listEl.appendChild(div);
-    });
+    // Ship panel removed - no-op
   }
 
   function updateEventStats(eventsData, conflictsData) {
-    document.getElementById('events-count').textContent = eventsData ? eventsData.length : '--';
-    document.getElementById('conflicts-count').textContent = conflictsData ? conflictsData.length : '--';
+    const ec = document.getElementById('events-count');
+    const cc = document.getElementById('conflicts-count');
+    if (ec) ec.textContent = eventsData ? eventsData.length : '--';
+    if (cc) cc.textContent = conflictsData ? conflictsData.length : '--';
   }
 
   function updateTimeline(events, conflicts) {
     const timelineEl = document.getElementById('event-timeline');
+    if (!timelineEl) return;
     const items = [];
 
     // Add GDELT events

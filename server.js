@@ -9,6 +9,7 @@ const shipsScraper = require('./scrapers/ships');
 const gdeltScraper = require('./scrapers/gdelt');
 const conflictsScraper = require('./scrapers/conflicts');
 const strikesScraper = require('./scrapers/strikes');
+const twitterScraper = require('./scrapers/twitter');
 
 const app = express();
 const server = http.createServer(app);
@@ -77,6 +78,33 @@ function startScrapers() {
   runScraper('events', gdeltScraper, 15 * 60 * 1000);     // 15 min
   runScraper('conflicts', conflictsScraper, 2 * 60 * 1000); // 2 min
   runScraper('strikes', strikesScraper, 10 * 60 * 1000);    // 10 min
+
+  // Twitter/X feed - merge into news
+  async function runTwitter() {
+    try {
+      const tweets = await twitterScraper();
+      if (tweets && tweets.length > 0) {
+        // Merge with existing news, tweets first
+        const combined = [...tweets, ...latestData.news];
+        // Deduplicate by id
+        const seen = new Set();
+        const deduped = combined.filter(item => {
+          if (seen.has(item.id)) return false;
+          seen.add(item.id);
+          return true;
+        });
+        // Sort newest first
+        deduped.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        latestData.news = deduped.slice(0, 80);
+        broadcast('news', latestData.news);
+        console.log(`[twitter] Merged ${tweets.length} tweets into news feed`);
+      }
+    } catch (e) {
+      console.error('[twitter] Error:', e.message);
+    }
+  }
+  runTwitter();
+  setInterval(runTwitter, 3 * 60 * 1000); // 3 min
 }
 
 const PORT = process.env.PORT || 3000;
