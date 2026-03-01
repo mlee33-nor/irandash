@@ -103,7 +103,8 @@ function startScrapers() {
       console.error('[twitter] Error:', e.message);
     }
   }
-  runTwitter();
+  // Delay first twitter run to let news load first
+  setTimeout(runTwitter, 15000);
   setInterval(runTwitter, 2 * 60 * 1000); // 2 min
 }
 
