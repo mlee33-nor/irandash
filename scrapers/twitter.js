@@ -1,11 +1,6 @@
 const fetch = require('node-fetch');
-const { HttpsProxyAgent } = require('https-proxy-agent');
 const RSSParser = require('rss-parser');
 const parser = new RSSParser();
-
-// HTTP proxy to avoid rate limiting
-const PROXY_URL = 'http://lumi-kpi5c55rgblc:92ceY8s10xm5Ivib@190.123.43.235:6011';
-const proxyAgent = new HttpsProxyAgent(PROXY_URL);
 
 const ACCOUNTS = [
   'BRICSinfo',
@@ -59,7 +54,6 @@ module.exports = async function scrapeTwitter() {
     try {
       const url = `https://syndication.twitter.com/srv/timeline-profile/screen-name/${account}`;
       const response = await fetch(url, {
-        agent: proxyAgent,
         timeout: 12000,
         headers: {
           'User-Agent': ua,
