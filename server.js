@@ -75,7 +75,7 @@ function startScrapers() {
   runScraper('aircraft', aircraftScraper, 15 * 1000);     // 15 sec
   runScraper('ships', shipsScraper, 60 * 1000);            // 60 sec
   runScraper('events', gdeltScraper, 15 * 60 * 1000);     // 15 min
-  runScraper('conflicts', conflictsScraper, 5 * 60 * 1000); // 5 min
+  runScraper('conflicts', conflictsScraper, 2 * 60 * 1000); // 2 min
   runScraper('strikes', strikesScraper, 10 * 60 * 1000);    // 10 min
 }
 

@@ -43,11 +43,13 @@ module.exports = async function scrapeConflicts() {
 async function fetchGdeltConflicts() {
   const queries = [
     'iran killed OR died OR death OR attack OR strike OR bomb',
-    'israel gaza killed OR attack OR strike OR bomb OR casualties',
+    'israel gaza killed OR attack OR strike OR bomb OR casualties OR school',
     'yemen houthi attack OR strike OR killed',
     'syria iraq attack OR killed OR bomb OR explosion',
     'hezbollah lebanon attack OR strike OR killed',
-    'iran leader OR khamenei OR death OR assassination'
+    'iran leader OR khamenei OR death OR assassination',
+    'middle east bomb OR airstrike OR shelling OR missile today',
+    'gaza school OR hospital OR shelter OR refugee attack OR bomb'
   ];
 
   const allEvents = [];
@@ -55,7 +57,8 @@ async function fetchGdeltConflicts() {
   const results = await Promise.allSettled(
     queries.map(async (q) => {
       const query = encodeURIComponent(q);
-      const url = `https://api.gdeltproject.org/api/v2/geo/geo?query=${query}&mode=pointdata&format=geojson&timespan=3d&maxpoints=30`;
+      // Use 15min timespan first for freshest data, fall back to 1d
+      const url = `https://api.gdeltproject.org/api/v2/geo/geo?query=${query}&mode=pointdata&format=geojson&timespan=60min&maxpoints=40`;
       const response = await fetch(url, { timeout: 15000 });
       if (!response.ok) return [];
       const text = await response.text();
@@ -105,6 +108,61 @@ async function fetchGdeltConflicts() {
     }
   }
 
+  // If 60min window returned very few results, also try 1d window
+  if (allEvents.length < 5) {
+    const fallbackResults = await Promise.allSettled(
+      queries.slice(0, 4).map(async (q) => {
+        const query = encodeURIComponent(q);
+        const url = `https://api.gdeltproject.org/api/v2/geo/geo?query=${query}&mode=pointdata&format=geojson&timespan=1d&maxpoints=20`;
+        const response = await fetch(url, { timeout: 15000 });
+        if (!response.ok) return [];
+        const text = await response.text();
+        if (!text || text.trim().length === 0) return [];
+        try {
+          const data = JSON.parse(text);
+          return data.features || [];
+        } catch {
+          return [];
+        }
+      })
+    );
+
+    for (const result of fallbackResults) {
+      if (result.status !== 'fulfilled') continue;
+      for (const f of result.value) {
+        const props = f.properties || {};
+        const coords = f.geometry?.coordinates || [0, 0];
+        const name = props.name || '';
+        const url = props.url || '';
+        const combined = (name + ' ' + url).toLowerCase();
+
+        const isConflict = /kill|dead|died|death|attack|strike|bomb|explos|casualt|wound|clash|fight|assault|shoot|shell|rocket|missile|assassinat|war|destroyed|school|hospital/.test(combined);
+        if (!isConflict) continue;
+
+        const country = detectCountry(name, coords[1], coords[0]);
+        if (!country) continue;
+
+        allEvents.push({
+          id: props.urlpubtimeseq || `gdelt-c-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          type: categorizeConflict(combined),
+          subtype: extractSubtype(combined),
+          country: country,
+          location: extractLocation(name) || 'Unknown',
+          lat: coords[1],
+          lng: coords[0],
+          date: props.dateadded ? formatGdeltDate(props.dateadded) : formatDate(new Date()),
+          fatalities: estimateFatalities(combined),
+          actor1: extractActor(combined, 1),
+          actor2: extractActor(combined, 2),
+          notes: name.slice(0, 250),
+          source: 'GDELT',
+          url: props.url || '',
+          tone: parseFloat(props.tone) || 0
+        });
+      }
+    }
+  }
+
   return allEvents;
 }
 
@@ -141,10 +199,13 @@ async function fetchConflictNews() {
 
   const feeds = [
     'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml',
-    'https://www.aljazeera.com/xml/rss/all.xml'
+    'https://www.aljazeera.com/xml/rss/all.xml',
+    'https://feeds.washingtonpost.com/rss/world',
+    'https://rss.app/feeds/v1.1/tFnGReFbiVMuYN3q.xml',
+    'https://news.google.com/rss/search?q=iran+OR+gaza+OR+israel+attack+OR+bomb+OR+killed&hl=en-US&gl=US&ceid=US:en',
   ];
 
-  const conflictKeywords = /kill|dead|died|death|attack|strike|bomb|explos|casualt|wound|clash|shoot|shell|rocket|missile|assassinat|war\b|offensive|raid/i;
+  const conflictKeywords = /kill|dead|died|death|attack|strike|bomb|explos|casualt|wound|clash|shoot|shell|rocket|missile|assassinat|war\b|offensive|raid|school|hospital|shelter|massacre/i;
 
   const results = await Promise.allSettled(
     feeds.map(url => parser.parseURL(url).catch(() => ({ items: [] })))
@@ -154,7 +215,12 @@ async function fetchConflictNews() {
     if (result.status !== 'fulfilled') continue;
     const items = result.value.items || [];
 
-    for (const item of items.slice(0, 15)) {
+    for (const item of items.slice(0, 25)) {
+      // Only include articles from the last 24 hours
+      const articleDate = item.isoDate ? new Date(item.isoDate) : null;
+      const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+      if (articleDate && articleDate.getTime() < cutoff) continue;
+
       const text = `${item.title || ''} ${item.contentSnippet || ''}`;
       if (!conflictKeywords.test(text)) continue;
 
