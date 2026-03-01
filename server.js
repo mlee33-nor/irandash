@@ -104,7 +104,7 @@ function startScrapers() {
     }
   }
   runTwitter();
-  setInterval(runTwitter, 3 * 60 * 1000); // 3 min
+  setInterval(runTwitter, 2 * 60 * 1000); // 2 min
 }
 
 const PORT = process.env.PORT || 3000;

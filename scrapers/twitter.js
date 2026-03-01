@@ -9,100 +9,130 @@ const ACCOUNTS = [
   'IsraelRadar_com',
 ];
 
-// Rotate user agents to avoid rate limiting
 const USER_AGENTS = [
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
   'Mozilla/5.0 (X11; Linux x86_64; rv:123.0) Gecko/20100101 Firefox/123.0',
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0',
 ];
-let uaIndex = 0;
+
+// Cache tweets so we always have something to show
+let cachedTweets = [];
+let lastSuccess = 0;
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 module.exports = async function scrapeTwitter() {
   const tweets = [];
+  let rateLimited = false;
 
-  // Method 1: Twitter syndication API with rotating user agents
-  for (const account of ACCOUNTS) {
-    try {
-      const ua = USER_AGENTS[uaIndex % USER_AGENTS.length];
-      uaIndex++;
-      const url = `https://syndication.twitter.com/srv/timeline-profile/screen-name/${account}`;
-      const response = await fetch(url, {
-        timeout: 10000,
-        headers: {
-          'User-Agent': ua,
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9',
-          'Accept-Language': 'en-US,en;q=0.9',
-        }
-      });
+  // Try each account with staggered requests
+  for (let a = 0; a < ACCOUNTS.length; a++) {
+    const account = ACCOUNTS[a];
+    if (rateLimited) break; // stop hammering if rate limited
 
-      if (response.status === 429) {
-        // Rate limited - try next UA
-        const retryUA = USER_AGENTS[uaIndex % USER_AGENTS.length];
-        uaIndex++;
-        console.log(`[twitter] @${account}: 429, retrying with different UA`);
-        const retry = await fetch(url, {
+    // Small delay between accounts to avoid 429
+    if (a > 0) await delay(1500);
+
+    let success = false;
+    // Try up to 2 different UAs per account
+    for (let attempt = 0; attempt < 2 && !success; attempt++) {
+      const ua = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+      try {
+        const url = `https://syndication.twitter.com/srv/timeline-profile/screen-name/${account}`;
+        const response = await fetch(url, {
           timeout: 10000,
           headers: {
-            'User-Agent': retryUA,
-            'Accept': 'text/html,application/xhtml+xml',
+            'User-Agent': ua,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.9',
+            'Cache-Control': 'no-cache',
           }
         });
-        if (retry.ok) {
-          const html = await retry.text();
-          parseSyndicationTweets(html, account, tweets);
-        } else {
-          console.log(`[twitter] @${account}: retry ${retry.status}`);
+
+        if (response.status === 429) {
+          console.log(`[twitter] @${account}: rate limited (429)`);
+          rateLimited = true;
+          break;
         }
-        continue;
-      }
 
-      if (!response.ok) {
-        console.log(`[twitter] @${account}: ${response.status}`);
-        continue;
-      }
+        if (!response.ok) {
+          console.log(`[twitter] @${account}: ${response.status}`);
+          continue;
+        }
 
-      const html = await response.text();
-      parseSyndicationTweets(html, account, tweets);
-    } catch (e) {
-      console.log(`[twitter] @${account}: ${e.message}`);
+        const html = await response.text();
+        const before = tweets.length;
+        parseSyndicationTweets(html, account, tweets);
+        const found = tweets.length - before;
+        if (found > 0) {
+          console.log(`[twitter] @${account}: ${found} tweets`);
+          success = true;
+        }
+      } catch (e) {
+        console.log(`[twitter] @${account}: ${e.message}`);
+      }
     }
   }
-  if (tweets.length > 0) console.log(`[twitter] syndication: ${tweets.length} tweets total`);
 
-  // Method 3: Google News search for these accounts as last resort
-  if (tweets.length === 0) {
-    try {
-      const handles = ACCOUNTS.map(a => `"@${a}"`).join('+OR+');
-      const gUrl = `https://news.google.com/rss/search?q=${handles}+iran+OR+israel+OR+strike&hl=en-US&gl=US&ceid=US:en`;
-      const feed = await Promise.race([
-        parser.parseURL(gUrl),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))
-      ]);
-      if (feed && feed.items) {
-        for (const item of feed.items.slice(0, 10)) {
-          if (item.isoDate) {
-            const age = Date.now() - new Date(item.isoDate).getTime();
-            if (age > 48 * 60 * 60 * 1000) continue;
+  // If syndication got some tweets, update cache
+  if (tweets.length > 0) {
+    cachedTweets = tweets;
+    lastSuccess = Date.now();
+    console.log(`[twitter] total: ${tweets.length} tweets (cached)`);
+    return tweets;
+  }
+
+  // Fallback: Google News RSS search for OSINT accounts
+  console.log('[twitter] syndication failed, trying Google News fallback');
+  try {
+    const queries = [
+      'https://news.google.com/rss/search?q=%22BRICSinfo%22+OR+%22IntelDoge%22+OR+%22IsraelRadar%22+iran+OR+israel&hl=en-US&gl=US&ceid=US:en',
+      'https://news.google.com/rss/search?q=iran+strike+OR+attack+OR+bomb+breaking&hl=en-US&gl=US&ceid=US:en',
+    ];
+    for (const gUrl of queries) {
+      try {
+        const feed = await Promise.race([
+          parser.parseURL(gUrl),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))
+        ]);
+        if (feed && feed.items) {
+          for (const item of feed.items.slice(0, 15)) {
+            if (item.isoDate) {
+              const age = Date.now() - new Date(item.isoDate).getTime();
+              if (age > 48 * 60 * 60 * 1000) continue;
+            }
+            const text = (item.title || '').trim();
+            if (text.length < 20) continue;
+            tweets.push({
+              id: `x-osint-${Buffer.from(item.link || text).toString('base64').slice(0, 16)}`,
+              title: text.slice(0, 200),
+              summary: (item.contentSnippet || '').slice(0, 200),
+              source: 'X/OSINT',
+              url: item.link || '',
+              timestamp: item.isoDate || new Date().toISOString(),
+              severity: getSeverity(text),
+              location: null
+            });
           }
-          const text = (item.title || '').trim();
-          if (text.length < 20) continue;
-          tweets.push({
-            id: `x-google-${Buffer.from(item.link || text).toString('base64').slice(0, 16)}`,
-            title: text.slice(0, 200),
-            summary: (item.contentSnippet || '').slice(0, 200),
-            source: 'X/OSINT',
-            url: item.link || '',
-            timestamp: item.isoDate || new Date().toISOString(),
-            severity: getSeverity(text),
-            location: null
-          });
         }
-        if (tweets.length > 0) console.log(`[twitter] google fallback: ${tweets.length} items`);
-      }
-    } catch (e) {}
+      } catch (e) {}
+    }
+    if (tweets.length > 0) {
+      console.log(`[twitter] google fallback: ${tweets.length} items`);
+      cachedTweets = tweets;
+      lastSuccess = Date.now();
+      return tweets;
+    }
+  } catch (e) {}
+
+  // Last resort: return cached tweets if less than 30 min old
+  if (cachedTweets.length > 0 && Date.now() - lastSuccess < 30 * 60 * 1000) {
+    console.log(`[twitter] returning ${cachedTweets.length} cached tweets`);
+    return cachedTweets;
   }
 
   return tweets;
